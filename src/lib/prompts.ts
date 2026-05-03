@@ -128,6 +128,69 @@ ${describeFamily(opts.members, opts.dietary)}
 }`;
 }
 
+export function buildNutritionPrompt(opts: {
+  members: MemberRow[];
+  days: { date: string; dishes: { name: string; ingredients: string }[] }[];
+  dietary?: Map<string, DietaryProfileForPrompt>;
+}): string {
+  const menu = opts.days
+    .map(
+      (d) =>
+        `${d.date}: ${d.dishes.map((x) => x.name || "（空）").join(" / ")}`,
+    )
+    .join("\n");
+
+  return `【家庭成员】
+${describeFamily(opts.members, opts.dietary)}
+
+【本周菜单】
+${menu}
+
+【任务】
+作为营养师，评估本周菜单：
+1. 7 项核心指标（每项给等级 + 一句话）：蛋白质、钙、铁、B 族维生素、膳食纤维、钠（盐）、脂肪
+2. 每位家庭成员的针对性评论（1 句）
+3. 3 条具体改进建议（食材级，可执行）
+
+严格输出 JSON：
+{
+  "overall": "本周整体一句话评价",
+  "metrics": [
+    {"name": "蛋白质", "level": "充足"|"基本满足"|"略不足"|"明显不足"|"偏高", "note": "..."},
+    ...其余 6 项...
+  ],
+  "perMember": [
+    {"name": "爷爷", "comment": "..."},
+    ...5 名成员...
+  ],
+  "improvements": ["...", "...", "..."]
+}`;
+}
+
+export function buildSubstitutePrompt(opts: {
+  ingredient: string;
+  dishName: string;
+  members: MemberRow[];
+}): string {
+  return `【家庭成员】
+${describeFamily(opts.members)}
+
+【场景】今天阿姨准备做「${opts.dishName}」，但「${opts.ingredient}」缺货 / 用完了。
+
+【任务】给出 3 个家里常备食材作为替代，要求：
+- 仍能保留「${opts.dishName}」的整体风味与营养意图
+- 符合家庭硬约束（爷爷低钠、奶奶易消化、爸妈减脂、妈妈乳糖不耐、宝宝软嫩）
+
+严格输出 JSON：
+{
+  "substitutes": [
+    {"name": "...", "howto": "替换方式或调整建议（一句话）", "tradeoff": "对比原食材的差异（一句话）"},
+    {"name": "...", "howto": "...", "tradeoff": "..."},
+    {"name": "...", "howto": "...", "tradeoff": "..."}
+  ]
+}`;
+}
+
 export function buildRecipePrompt(opts: {
   dishName: string;
   ingredients: string;

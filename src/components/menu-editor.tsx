@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Loader2, Sparkles, Wand2 } from "lucide-react";
+import { BarChart3, Loader2, Sparkles, Wand2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -15,13 +16,28 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  analyzeNutritionAction,
   generateWeekAction,
   getCandidatesAction,
   saveWeekAction,
 } from "@/app/actions";
+import type { NutritionAnalysis } from "@/lib/menu-gen";
 import { DISH_SLOTS, WEEKDAYS, type DayInput } from "@/lib/shared";
 
 type Candidate = { name: string; ingredients: string; reason?: string };
+
+const LEVEL_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+  充足: "default",
+  基本满足: "secondary",
+  略不足: "outline",
+  明显不足: "destructive",
+  偏高: "destructive",
+};
+
+function LevelBadge({ level }: { level: string }) {
+  const variant = LEVEL_VARIANT[level] ?? "outline";
+  return <Badge variant={variant}>{level}</Badge>;
+}
 
 export function MenuEditor({
   weekId,
@@ -44,6 +60,10 @@ export function MenuEditor({
   } | null>(null);
   const [candidates, setCandidates] = useState<Candidate[] | null>(null);
   const [pendingCandidates, startCandidates] = useTransition();
+
+  const [analysisOpen, setAnalysisOpen] = useState(false);
+  const [analysis, setAnalysis] = useState<NutritionAnalysis | null>(null);
+  const [pendingAnalysis, startAnalysis] = useTransition();
 
   const update = (
     di: number,
@@ -112,6 +132,17 @@ export function MenuEditor({
     setReplacing(null);
   };
 
+  const openAnalysis = () => {
+    setAnalysisOpen(true);
+    setAnalysis(null);
+    setError(null);
+    startAnalysis(async () => {
+      const res = await analyzeNutritionAction({ days });
+      if (res.ok) setAnalysis(res.analysis);
+      else setError(res.error);
+    });
+  };
+
   return (
     <div className="space-y-4">
       <div className="sticky top-0 z-10 -mx-6 flex flex-wrap items-center justify-between gap-2 border-b bg-background/95 px-6 py-3 backdrop-blur">
@@ -123,6 +154,14 @@ export function MenuEditor({
               : "未保存的修改会自动暂存在表单内"}
         </p>
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={openAnalysis}
+            disabled={pendingAnalysis || pendingGenerate}
+          >
+            <BarChart3 className="mr-1 size-4" />
+            营养分析
+          </Button>
           <Button
             variant="outline"
             onClick={onGenerateWeek}
@@ -186,6 +225,71 @@ export function MenuEditor({
           </Card>
         ))}
       </div>
+
+      <Dialog open={analysisOpen} onOpenChange={setAnalysisOpen}>
+        <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>本周营养分析</DialogTitle>
+            <DialogDescription>
+              AI 综合本周菜单 + 5 人画像 + 体检处方给出评估
+            </DialogDescription>
+          </DialogHeader>
+          {pendingAnalysis && !analysis ? (
+            <div className="flex items-center gap-2 py-8 text-sm text-muted-foreground">
+              <Loader2 className="size-4 animate-spin" />
+              正在分析中…
+            </div>
+          ) : analysis ? (
+            <div className="space-y-5 text-sm">
+              <p className="rounded-md border bg-muted/30 p-3">
+                💬 {analysis.overall}
+              </p>
+              <section>
+                <h5 className="mb-2 text-sm font-semibold">7 项核心指标</h5>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {analysis.metrics.map((m) => (
+                    <div
+                      key={m.name}
+                      className="rounded-md border p-2"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">{m.name}</span>
+                        <LevelBadge level={m.level} />
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {m.note}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+              <section>
+                <h5 className="mb-2 text-sm font-semibold">每位成员</h5>
+                <ul className="space-y-1.5">
+                  {analysis.perMember.map((p) => (
+                    <li key={p.name} className="flex gap-2">
+                      <span className="font-medium">{p.name}：</span>
+                      <span className="flex-1 text-muted-foreground">
+                        {p.comment}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+              <section>
+                <h5 className="mb-2 text-sm font-semibold">改进建议</h5>
+                <ul className="list-inside list-disc space-y-1">
+                  {analysis.improvements.map((s, i) => (
+                    <li key={i}>{s}</li>
+                  ))}
+                </ul>
+              </section>
+            </div>
+          ) : (
+            <p className="py-4 text-sm text-destructive">{error}</p>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         open={!!replacing}

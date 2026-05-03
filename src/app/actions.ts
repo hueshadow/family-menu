@@ -22,9 +22,13 @@ import {
   type HealthReportParsed,
 } from "@/lib/health";
 import {
+  analyzeWeekNutrition,
   generateRecipe,
   generateWeekMenu,
   getDishCandidates,
+  getIngredientSubstitutes,
+  type NutritionAnalysis,
+  type Substitutes,
 } from "@/lib/menu-gen";
 import { getPdfPageCount } from "@/lib/pdf";
 import { type DayInput, type MemberRole } from "@/lib/shared";
@@ -147,6 +151,85 @@ export async function getCandidatesAction(opts: {
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : String(e) };
   }
+}
+
+// ========== Nutrition analysis ==========
+
+export async function analyzeNutritionAction(opts: {
+  days: DayInput[];
+}): Promise<{ ok: true; analysis: NutritionAnalysis } | { ok: false; error: string }> {
+  try {
+    const [members, profiles] = await Promise.all([
+      getMembers(),
+      getLatestDietaryProfiles(),
+    ]);
+    const dietary = new Map(
+      profiles.map((p) => [
+        p.member_id,
+        {
+          tags: p.tags,
+          recommend: p.recommend,
+          avoid: p.avoid,
+          rationale: p.rationale,
+        },
+      ]),
+    );
+    const analysis = await analyzeWeekNutrition({
+      members,
+      days: opts.days,
+      dietary,
+    });
+    return { ok: true, analysis };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+// ========== Substitutes ==========
+
+export async function getSubstitutesAction(opts: {
+  ingredient: string;
+  dishName: string;
+}): Promise<
+  | { ok: true; substitutes: Substitutes["substitutes"] }
+  | { ok: false; error: string }
+> {
+  try {
+    const members = await getMembers();
+    const subs = await getIngredientSubstitutes({
+      ingredient: opts.ingredient,
+      dishName: opts.dishName,
+      members,
+    });
+    return { ok: true, substitutes: subs };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+// ========== Weekly menu history ==========
+
+export async function listWeeksAction(): Promise<
+  Array<{ id: string; week_start: string; status: string; dishes: string[] }>
+> {
+  const rows = await query<{
+    id: string;
+    week_start: string;
+    status: string;
+    days: { date: string; dishes: { name: string }[] }[];
+  }>(
+    `select id, week_start::text, status, days from weekly_menus
+     order by week_start desc limit 50`,
+  );
+  return rows.map((r) => ({
+    id: r.id,
+    week_start: r.week_start,
+    status: r.status,
+    dishes: r.days
+      .flatMap((d) => d.dishes.map((x) => x.name))
+      .filter(Boolean)
+      .slice(0, 8),
+  }));
 }
 
 // ========== Health reports ==========

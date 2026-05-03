@@ -5,6 +5,23 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toggleShoppingItemAction } from "@/app/actions";
 import { CATEGORY_LABELS, type ShoppingItem } from "@/lib/shared";
 
+const PLATFORMS: Array<{ label: string; build: (q: string) => string }> = [
+  {
+    label: "盒马",
+    build: (q) => `https://www.freshhema.com/search?q=${encodeURIComponent(q)}`,
+  },
+  {
+    label: "京东",
+    build: (q) =>
+      `https://search.jd.com/Search?keyword=${encodeURIComponent(q)}`,
+  },
+  {
+    label: "美团",
+    build: (q) =>
+      `https://maicai.meituan.com/search/${encodeURIComponent(q)}`,
+  },
+];
+
 export function ShoppingList({
   listId,
   items,
@@ -35,6 +52,19 @@ export function ShoppingList({
     });
   };
 
+  const onCopyAll = () => {
+    const text = [...grouped.entries()]
+      .map(
+        ([cat, arr]) =>
+          `${CATEGORY_LABELS[cat] ?? cat}\n${arr
+            .filter((i) => !i.checked)
+            .map((i) => `- ${i.name}${i.qty ? ` (${i.qty})` : ""}`)
+            .join("\n")}`,
+      )
+      .join("\n\n");
+    navigator.clipboard.writeText(text);
+  };
+
   return (
     <div className="space-y-5">
       <div className="rounded-md border p-4">
@@ -50,6 +80,13 @@ export function ShoppingList({
             style={{ width: total ? `${(done / total) * 100}%` : 0 }}
           />
         </div>
+        <button
+          type="button"
+          onClick={onCopyAll}
+          className="mt-3 text-sm text-muted-foreground underline-offset-2 hover:underline"
+        >
+          📋 复制未购清单到剪贴板
+        </button>
       </div>
 
       {[...grouped.entries()].map(([cat, arr]) => (
@@ -59,25 +96,42 @@ export function ShoppingList({
             {arr.map((item) => (
               <li
                 key={item.name}
-                className="flex items-center gap-3 rounded-md border p-3"
+                className="flex flex-col gap-2 rounded-md border p-3"
               >
-                <Checkbox
-                  id={`item-${item.name}`}
-                  checked={item.checked}
-                  onCheckedChange={(c) => onToggle(item.name, !!c)}
-                  className="size-6"
-                />
-                <label
-                  htmlFor={`item-${item.name}`}
-                  className={`flex-1 text-base ${item.checked ? "line-through text-muted-foreground" : ""}`}
-                >
-                  {item.name}
-                  {item.qty ? (
-                    <span className="ml-2 text-sm text-muted-foreground">
-                      {item.qty}
-                    </span>
-                  ) : null}
-                </label>
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    id={`item-${item.name}`}
+                    checked={item.checked}
+                    onCheckedChange={(c) => onToggle(item.name, !!c)}
+                    className="size-6"
+                  />
+                  <label
+                    htmlFor={`item-${item.name}`}
+                    className={`flex-1 text-base ${item.checked ? "line-through text-muted-foreground" : ""}`}
+                  >
+                    {item.name}
+                    {item.qty ? (
+                      <span className="ml-2 text-sm text-muted-foreground">
+                        {item.qty}
+                      </span>
+                    ) : null}
+                  </label>
+                </div>
+                {!item.checked ? (
+                  <div className="flex flex-wrap gap-2 pl-9 text-xs">
+                    {PLATFORMS.map((p) => (
+                      <a
+                        key={p.label}
+                        href={p.build(item.name)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="rounded border px-2 py-0.5 text-muted-foreground hover:border-foreground/40 hover:text-foreground"
+                      >
+                        🔍 {p.label}
+                      </a>
+                    ))}
+                  </div>
+                ) : null}
               </li>
             ))}
           </ul>

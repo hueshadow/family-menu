@@ -2,6 +2,7 @@ import Link from "next/link";
 
 const NAV = [
   { href: "/mama", label: "本周菜单" },
+  { href: "/mama/history", label: "历史" },
   { href: "/mama/family", label: "家庭档案" },
   { href: "/mama/reports", label: "体检报告" },
 ];

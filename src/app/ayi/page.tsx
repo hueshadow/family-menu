@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RecipeBlock } from "@/components/recipe-block";
+import { SubstituteHelper } from "@/components/substitute-helper";
 import {
   getOrCreateWeek,
   getRecipesByNames,
@@ -79,12 +80,17 @@ export default async function AyiHome() {
                   <p className="text-xs text-muted-foreground">食材待补充</p>
                 )}
                 {dish.name.trim() ? (
-                  <RecipeBlock
-                    dishName={dish.name}
-                    ingredients={dish.ingredients}
-                    initialSteps={recipe?.steps}
-                    initialTips={recipe?.notes ?? undefined}
-                  />
+                  <>
+                    <RecipeBlock
+                      dishName={dish.name}
+                      ingredients={dish.ingredients}
+                      initialSteps={recipe?.steps}
+                      initialTips={recipe?.notes ?? undefined}
+                    />
+                    <div className="mt-2">
+                      <SubstituteHelper dishName={dish.name} />
+                    </div>
+                  </>
                 ) : null}
               </CardContent>
             </Card>

@@ -3,7 +3,9 @@ import { z } from "zod";
 import { chatJson, MODELS } from "@/lib/ai-server";
 import {
   buildCandidatesPrompt,
+  buildNutritionPrompt,
   buildRecipePrompt,
+  buildSubstitutePrompt,
   buildWeekPrompt,
   SYSTEM_NUTRITIONIST,
   type DietaryProfileForPrompt,
@@ -92,6 +94,80 @@ export async function getDishCandidates(opts: {
   });
   const parsed = CandidatesOutputSchema.parse(raw);
   return parsed.candidates.slice(0, 3);
+}
+
+const NutritionLevelSchema = z.enum([
+  "充足",
+  "基本满足",
+  "略不足",
+  "明显不足",
+  "偏高",
+]);
+
+const NutritionAnalysisSchema = z.object({
+  overall: z.string(),
+  metrics: z
+    .array(
+      z.object({
+        name: z.string(),
+        level: NutritionLevelSchema,
+        note: z.string(),
+      }),
+    )
+    .min(5)
+    .max(10),
+  perMember: z
+    .array(
+      z.object({
+        name: z.string(),
+        comment: z.string(),
+      }),
+    )
+    .min(3)
+    .max(6),
+  improvements: z.array(z.string()).min(1).max(6),
+});
+export type NutritionAnalysis = z.infer<typeof NutritionAnalysisSchema>;
+
+export async function analyzeWeekNutrition(opts: {
+  members: MemberRow[];
+  days: { date: string; dishes: { name: string; ingredients: string }[] }[];
+  dietary?: Map<string, DietaryProfileForPrompt>;
+}): Promise<NutritionAnalysis> {
+  const raw = await chatJson<unknown>({
+    model: MODELS.primary,
+    system: SYSTEM_NUTRITIONIST,
+    user: buildNutritionPrompt(opts),
+  });
+  return NutritionAnalysisSchema.parse(raw);
+}
+
+const SubstitutesSchema = z.object({
+  substitutes: z
+    .array(
+      z.object({
+        name: z.string(),
+        howto: z.string(),
+        tradeoff: z.string().optional(),
+      }),
+    )
+    .min(2)
+    .max(5),
+});
+export type Substitutes = z.infer<typeof SubstitutesSchema>;
+
+export async function getIngredientSubstitutes(opts: {
+  ingredient: string;
+  dishName: string;
+  members: MemberRow[];
+}): Promise<Substitutes["substitutes"]> {
+  const raw = await chatJson<unknown>({
+    model: MODELS.cheap,
+    system: SYSTEM_NUTRITIONIST,
+    user: buildSubstitutePrompt(opts),
+  });
+  const parsed = SubstitutesSchema.parse(raw);
+  return parsed.substitutes.slice(0, 3);
 }
 
 export async function generateRecipe(opts: {
