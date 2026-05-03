@@ -137,7 +137,7 @@ export function MenuEditor({
     setAnalysis(null);
     setError(null);
     startAnalysis(async () => {
-      const res = await analyzeNutritionAction({ days });
+      const res = await analyzeNutritionAction({ weekId, days });
       if (res.ok) setAnalysis(res.analysis);
       else setError(res.error);
     });

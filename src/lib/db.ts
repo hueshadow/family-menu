@@ -112,7 +112,7 @@ function normalizeDays(days: DayInput[]): DayInput[] {
 export async function getOrCreateWeek(weekStart: Date): Promise<WeekRow> {
   const wsIso = isoDate(weekStart);
   const existing = await query<WeekRow>(
-    `select id, week_start::text, status, days, locked_at
+    `select id, week_start::text, status, days, locked_at, auto_generated
      from weekly_menus where week_start = $1 limit 1`,
     [wsIso],
   );
@@ -127,7 +127,7 @@ export async function getOrCreateWeek(weekStart: Date): Promise<WeekRow> {
   const [created] = await query<WeekRow>(
     `insert into weekly_menus (week_start, status, days)
      values ($1, 'draft', $2::jsonb)
-     returning id, week_start::text, status, days, locked_at`,
+     returning id, week_start::text, status, days, locked_at, auto_generated`,
     [wsIso, JSON.stringify(emptyDays)],
   );
   return created;
@@ -235,6 +235,33 @@ export async function getRecipesByNames(names: string[]): Promise<RecipeRow[]> {
   return query<RecipeRow>(
     `select name, steps, notes from recipes where name = any($1::text[])`,
     [names],
+  );
+}
+
+export async function saveWeekAnalysis(
+  weekId: string,
+  analysis: unknown,
+): Promise<void> {
+  await query(
+    `update weekly_menus set analysis = $1::jsonb, analyzed_at = now() where id = $2`,
+    [JSON.stringify(analysis), weekId],
+  );
+}
+
+export interface WeekAnalysisRow {
+  week_start: string;
+  analysis: unknown;
+  analyzed_at: string;
+}
+
+export async function getRecentAnalyses(limit = 8): Promise<WeekAnalysisRow[]> {
+  return query<WeekAnalysisRow>(
+    `select week_start::text, analysis, analyzed_at::text as analyzed_at
+     from weekly_menus
+     where analysis is not null
+     order by week_start desc
+     limit $1`,
+    [limit],
   );
 }
 

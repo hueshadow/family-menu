@@ -1,3 +1,4 @@
+import { describeSeasonal } from "@/lib/seasonal";
 import { DISH_SLOTS, type MemberRow } from "@/lib/shared";
 
 export interface DietaryProfileForPrompt {
@@ -67,13 +68,14 @@ export function buildWeekPrompt(opts: {
   recentDishes: string[];
   dietary?: Map<string, DietaryProfileForPrompt>;
 }): string {
+  const seasonalLine = describeSeasonal(new Date(opts.weekDates[0]));
   return `【家庭成员】
 ${describeFamily(opts.members, opts.dietary)}
 
 【本周日期】
 ${opts.weekDates.join(", ")}（周一—周六）
 
-【近期已做（避免重复）】
+${seasonalLine ? `【时令优选】\n${seasonalLine}\n（请尽量使用时令食材，让本周菜单有当季风味）\n\n` : ""}【近期已做（避免重复）】
 ${opts.recentDishes.length ? opts.recentDishes.join("、") : "暂无历史"}
 
 【任务】

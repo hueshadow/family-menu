@@ -54,6 +54,10 @@ create table if not exists weekly_menus (
   created_at timestamptz not null default now()
 );
 
+alter table weekly_menus add column if not exists analysis jsonb;
+alter table weekly_menus add column if not exists analyzed_at timestamptz;
+alter table weekly_menus add column if not exists auto_generated boolean not null default false;
+
 create table if not exists shopping_lists (
   id uuid primary key default uuid_generate_v4(),
   week_id uuid not null references weekly_menus(id) on delete cascade,

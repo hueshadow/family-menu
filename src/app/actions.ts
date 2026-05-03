@@ -13,6 +13,7 @@ import {
   insertHealthReport,
   query,
   saveWeek,
+  saveWeekAnalysis,
   setShoppingItemChecked,
   upsertDietaryProfile,
 } from "@/lib/db";
@@ -156,6 +157,7 @@ export async function getCandidatesAction(opts: {
 // ========== Nutrition analysis ==========
 
 export async function analyzeNutritionAction(opts: {
+  weekId?: string;
   days: DayInput[];
 }): Promise<{ ok: true; analysis: NutritionAnalysis } | { ok: false; error: string }> {
   try {
@@ -179,6 +181,9 @@ export async function analyzeNutritionAction(opts: {
       days: opts.days,
       dietary,
     });
+    if (opts.weekId) {
+      await saveWeekAnalysis(opts.weekId, analysis);
+    }
     return { ok: true, analysis };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : String(e) };

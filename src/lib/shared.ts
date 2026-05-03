@@ -38,6 +38,7 @@ export interface WeekRow {
   status: "draft" | "reviewing" | "locked" | "archived";
   days: DayInput[];
   locked_at: string | null;
+  auto_generated?: boolean;
 }
 
 export interface ShoppingItem {
