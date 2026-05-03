@@ -1,34 +1,26 @@
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { MenuEditor } from "@/components/menu-editor";
+import { getOrCreateWeek, mondayOf } from "@/lib/db";
 
-export default function MamaHome() {
+export const dynamic = "force-dynamic";
+
+export default async function MamaHome() {
+  const monday = mondayOf();
+  const week = await getOrCreateWeek(monday);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-2xl font-semibold">本周菜单</h3>
-          <p className="text-sm text-muted-foreground">M2 将在此处呈现 6 天 × 4 菜审核网格</p>
+          <p className="text-sm text-muted-foreground">
+            {week.days[0].date} – {week.days[5].date} · 周一至周六 · 每天 4 道菜
+          </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline">骨架</Badge>
-          <Button disabled>一键生成下周</Button>
-        </div>
+        <Badge variant="outline">手动录入 (M2)</Badge>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {["周一", "周二", "周三", "周四", "周五", "周六"].map((d) => (
-          <Card key={d}>
-            <CardHeader>
-              <CardTitle className="text-base">{d}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-1 text-sm text-muted-foreground">
-              <p>主荤 / 副荤 / 蔬菜 / 汤</p>
-              <p className="text-xs">待 AI 生成</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <MenuEditor weekId={week.id} initialDays={week.days} />
     </div>
   );
 }
