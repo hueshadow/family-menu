@@ -61,16 +61,34 @@ PDF 上传 → 文本/视觉 OCR → AI 结构化 → 饮食处方
 ```bash
 cp .env.example .env.local   # 填入真实凭据
 npm install
-npm run dev                  # http://localhost:3000
+npm run migrate              # 一次性，初始化 Supabase schema
+npm run seed                 # 一次性，写入 5 名家庭成员
+npm run dev                  # 本机访问 http://localhost:3000
 ```
 
-数据库初始化：把 `src/lib/db.sql` 粘进 Supabase SQL Editor 执行。
+### 让家人手机也能访问（同 WiFi）
+
+```bash
+npm run ip          # 打印你 Mac 的局域网 IP
+npm run dev:lan     # 监听 0.0.0.0:3000，手机浏览器访问 http://<你的IP>:3000
+```
+
+> **奶奶**和**阿姨**的入口就在这个 URL 上。建议把 `/naina`、`/ayi` 加到手机主屏幕。
+
+### 长期跑（生产模式 + 后台）
+
+```bash
+npm run build
+npm run start:lan   # 比 dev 快，资源占用低
+```
+
+要让它在 Mac 重启后自动起，可后续配 `pm2` 或 `launchd`，按需再加。
 
 ## 凭据安全清单
 
-- AI Key、Supabase Secret Key、DB 密码 → 仅 `.env.local` / Vercel 环境变量
+- AI Key、Supabase Secret Key、DB 密码 → 仅 `.env.local`
 - 永不贴入 issue / commit / 聊天记录
-- 暴露后立刻去服务商后台**重置**
+- `.env.local` 已被 `.gitignore` 排除
 
 ## 目录约定
 

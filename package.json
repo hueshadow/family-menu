@@ -4,8 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:lan": "next dev -H 0.0.0.0",
     "build": "next build",
     "start": "next start",
+    "start:lan": "next start -H 0.0.0.0",
+    "ip": "node -e \"const o=require('os').networkInterfaces();for(const k in o)for(const i of o[k])if(i.family==='IPv4'&&!i.internal)console.log(' http://'+i.address+':3000  ('+k+')')\"",
     "lint": "eslint",
     "migrate": "node --env-file=.env.local scripts/migrate.mjs",
     "seed": "node --env-file=.env.local scripts/seed.mjs",
