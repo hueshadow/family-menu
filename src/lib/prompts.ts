@@ -1,0 +1,132 @@
+import { DISH_SLOTS, type MemberRow } from "@/lib/shared";
+
+export const SYSTEM_NUTRITIONIST = `你是一位苏州本帮 / 江浙菜厨师 + 营养师，为一个 5 口家庭设计家常菜单。
+
+【菜系定位】
+- 苏州本帮、江浙家常为主：清蒸、红烧（少糖少油版）、糖醋（轻甜）、白灼、炖煮、糟卤
+- 重原汁原味，避免重油重辣
+- 时令优先：太湖三白（白鱼/白虾/银鱼）、河鲜、莼菜、鸡头米、春笋冬笋、菱角、马兰头、香椿、塌棵菜等
+- 居住地：苏州，便于采购本地食材
+
+【全家同桌原则】
+- 每天 5 道菜（主荤 / 副荤 / 蔬菜 / 凉菜 / 汤）全员同享
+- 通过烹饪法（去油、去皮、剪碎）和份量调节适配不同需求
+- 不为单人单做不同菜（除非特殊医嘱）
+
+【硬约束（必须满足）】
+1. 爷爷高血压：钠盐总体偏低；推荐降压食材：芹菜、洋葱、海带、香菇、深海/河鲜、燕麦、黑木耳
+2. 奶奶易消化：避免坚硬粗纤维；蒸炖、嫩肉/鱼/蛋/豆制品优先
+3. 爸妈减脂：去皮去脂、烹饪用油少；杂粮替代部分白米；高蛋白足量
+4. 妈妈乳糖：菜中不用奶酪 / 鲜奶；可用酸奶
+5. 宝宝（18M）：菜不能太硬太辣；坚果整粒不出现；菜要可剪碎
+6. 妈妈香料偏好：本周菜单中 **每天至少 1 道菜** 含香料元素（八角/桂皮/香叶/花椒/孜然/迷迭香/罗勒/陈皮等），但用量克制不冲老人宝宝
+7. 周内重复：同一道菜在 6 天内最多出现 1 次
+8. 每周至少 2 次鱼类（深海鱼或河鲜）
+
+【输出语言】简体中文。食材字段格式："鲈鱼 1 条, 葱姜适量, 蒸鱼豉油"。`;
+
+export function describeFamily(members: MemberRow[]): string {
+  return members
+    .map((m) => {
+      const lines: string[] = [];
+      if (m.profile.healthFlags?.length)
+        lines.push(`健康：${m.profile.healthFlags.join(" / ")}`);
+      if (m.profile.intolerances?.length)
+        lines.push(`不耐：${m.profile.intolerances.join(" / ")}`);
+      if (m.profile.goals?.length)
+        lines.push(`目标：${m.profile.goals.join(" / ")}`);
+      if (m.profile.preferences?.length)
+        lines.push(`偏好：${m.profile.preferences.join(" / ")}`);
+      if (m.profile.notes) lines.push(`备注：${m.profile.notes}`);
+      return `- ${m.name}（${m.age}岁）\n  ${lines.join("\n  ")}`;
+    })
+    .join("\n");
+}
+
+export function buildWeekPrompt(opts: {
+  members: MemberRow[];
+  weekDates: string[]; // 6 ISO dates
+  recentDishes: string[];
+}): string {
+  return `【家庭成员】
+${describeFamily(opts.members)}
+
+【本周日期】
+${opts.weekDates.join(", ")}（周一—周六）
+
+【近期已做（避免重复）】
+${opts.recentDishes.length ? opts.recentDishes.join("、") : "暂无历史"}
+
+【任务】
+为这 6 天每天设计 ${DISH_SLOTS.length} 道菜：${DISH_SLOTS.join(" / ")}。
+严格按下列 JSON 格式输出（仅 JSON，无任何额外文字、注释或 markdown）：
+
+{
+  "days": [
+    {
+      "date": "YYYY-MM-DD",
+      "dishes": [
+        {"slot": "主荤", "name": "...", "ingredients": "食材1 数量, 食材2 数量, ...", "reason": "为什么这道菜适合这家（一句话，可选）"},
+        {"slot": "副荤", "name": "...", "ingredients": "...", "reason": "..."},
+        {"slot": "蔬菜", "name": "...", "ingredients": "...", "reason": "..."},
+        {"slot": "凉菜", "name": "...", "ingredients": "...", "reason": "..."},
+        {"slot": "汤",   "name": "...", "ingredients": "...", "reason": "..."}
+      ]
+    }
+    // ... 6 个 day 对象，date 严格匹配上面给的日期顺序
+  ]
+}`;
+}
+
+export function buildCandidatesPrompt(opts: {
+  members: MemberRow[];
+  slot: string;
+  currentName: string;
+  todayOtherDishes: string[];
+  weekOtherDishes: string[];
+}): string {
+  return `【家庭成员】
+${describeFamily(opts.members)}
+
+【场景】
+本周菜单中有一道 ${opts.slot}「${opts.currentName}」需要替换。
+
+【今日其它菜】${opts.todayOtherDishes.filter(Boolean).join("、") || "（无）"}
+【本周其它菜】${opts.weekOtherDishes.filter(Boolean).join("、") || "（无）"}
+
+【任务】
+给出 3 个候选替代菜（${opts.slot}），都要符合家庭硬约束和苏州本帮 / 江浙菜风格，且与今日其它菜互补、与本周其它菜不重复。
+
+严格按下列 JSON 格式输出（仅 JSON）：
+
+{
+  "candidates": [
+    {"name": "...", "ingredients": "食材1 数量, 食材2 数量, ...", "reason": "为什么推荐（一句话）"},
+    {"name": "...", "ingredients": "...", "reason": "..."},
+    {"name": "...", "ingredients": "...", "reason": "..."}
+  ]
+}`;
+}
+
+export function buildRecipePrompt(opts: {
+  dishName: string;
+  ingredients: string;
+}): string {
+  return `请为以下家常菜写做法。
+
+菜名：${opts.dishName}
+食材：${opts.ingredients}
+
+要求：
+- 苏州本帮 / 江浙菜清淡风格；少油少盐
+- 步骤简明，给阿姨看（已会做菜，无需基础说明）
+- 末尾给出"老人/宝宝注意事项"一两条（如：盐量减半、鱼刺挑净、剪碎给宝宝等）
+- 字数不超过 300
+
+严格按下列 JSON 格式输出（仅 JSON）：
+
+{
+  "steps": "1. ...\\n2. ...\\n3. ...",
+  "tips": "..."
+}`;
+}

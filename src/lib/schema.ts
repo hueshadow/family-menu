@@ -71,9 +71,18 @@ export const DishRefSchema = z.object({
   reason: z.string().optional(),
 });
 
+export const DISH_SLOTS = [
+  "主荤",
+  "副荤",
+  "蔬菜",
+  "凉菜",
+  "汤",
+] as const;
+export const DISHES_PER_DAY = DISH_SLOTS.length;
+
 export const DaySchema = z.object({
   date: z.string(),
-  dishes: z.array(DishRefSchema).length(4),
+  dishes: z.array(DishRefSchema).length(DISHES_PER_DAY),
 });
 
 export const WeeklyMenuSchema = z.object({

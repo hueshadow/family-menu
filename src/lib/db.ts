@@ -1,11 +1,13 @@
 import "server-only";
 import { Pool } from "pg";
-import type {
-  DayInput,
-  MemberRow,
-  ShoppingItem,
-  ShoppingListRow,
-  WeekRow,
+import {
+  DISHES_PER_DAY,
+  type DayInput,
+  type DishInput,
+  type MemberRow,
+  type ShoppingItem,
+  type ShoppingListRow,
+  type WeekRow,
 } from "@/lib/shared";
 
 export type {
@@ -95,6 +97,18 @@ export async function getMembers(): Promise<MemberRow[]> {
   );
 }
 
+function emptyDish(): DishInput {
+  return { name: "", ingredients: "" };
+}
+
+function normalizeDays(days: DayInput[]): DayInput[] {
+  return days.map((d) => {
+    const dishes = [...(d.dishes ?? [])];
+    while (dishes.length < DISHES_PER_DAY) dishes.push(emptyDish());
+    return { ...d, dishes: dishes.slice(0, DISHES_PER_DAY) };
+  });
+}
+
 export async function getOrCreateWeek(weekStart: Date): Promise<WeekRow> {
   const wsIso = isoDate(weekStart);
   const existing = await query<WeekRow>(
@@ -102,16 +116,13 @@ export async function getOrCreateWeek(weekStart: Date): Promise<WeekRow> {
      from weekly_menus where week_start = $1 limit 1`,
     [wsIso],
   );
-  if (existing[0]) return existing[0];
+  if (existing[0]) {
+    return { ...existing[0], days: normalizeDays(existing[0].days) };
+  }
 
   const emptyDays: DayInput[] = weekDates(weekStart).map((d) => ({
     date: isoDate(d),
-    dishes: [
-      { name: "", ingredients: "" },
-      { name: "", ingredients: "" },
-      { name: "", ingredients: "" },
-      { name: "", ingredients: "" },
-    ],
+    dishes: Array.from({ length: DISHES_PER_DAY }, () => emptyDish()),
   }));
   const [created] = await query<WeekRow>(
     `insert into weekly_menus (week_start, status, days)
@@ -120,6 +131,37 @@ export async function getOrCreateWeek(weekStart: Date): Promise<WeekRow> {
     [wsIso, JSON.stringify(emptyDays)],
   );
   return created;
+}
+
+export interface RecipeRow {
+  name: string;
+  steps: string;
+  notes: string | null;
+}
+
+export async function getRecipesByNames(names: string[]): Promise<RecipeRow[]> {
+  if (names.length === 0) return [];
+  return query<RecipeRow>(
+    `select name, steps, notes from recipes where name = any($1::text[])`,
+    [names],
+  );
+}
+
+export async function getRecentWeeksMenu(
+  beforeWeekStart: Date,
+  count = 3,
+): Promise<{ weekStart: string; dishes: string[] }[]> {
+  const rows = await query<{ week_start: string; days: DayInput[] }>(
+    `select week_start::text, days from weekly_menus
+     where week_start < $1 order by week_start desc limit $2`,
+    [isoDate(beforeWeekStart), count],
+  );
+  return rows.map((r) => ({
+    weekStart: r.week_start,
+    dishes: r.days
+      .flatMap((d) => d.dishes.map((x) => x.name))
+      .filter((n) => !!n?.trim()),
+  }));
 }
 
 export async function saveWeek(

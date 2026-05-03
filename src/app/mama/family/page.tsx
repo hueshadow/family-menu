@@ -49,6 +49,15 @@ export default async function FamilyPage() {
                   ))}
                 </Section>
               ) : null}
+              {m.profile.preferences?.length ? (
+                <Section label="偏好">
+                  {m.profile.preferences.map((f) => (
+                    <Badge key={f} variant="secondary">
+                      {f}
+                    </Badge>
+                  ))}
+                </Section>
+              ) : null}
               {m.profile.notes ? (
                 <p className="text-muted-foreground">{m.profile.notes}</p>
               ) : null}

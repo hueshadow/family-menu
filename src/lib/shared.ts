@@ -1,5 +1,10 @@
 // Pure shared types/constants — no Node-only deps. Safe in client components.
 
+export const DISH_SLOTS = ["主荤", "副荤", "蔬菜", "凉菜", "汤"] as const;
+export const DISH_ICONS = ["🍖", "🍳", "🥬", "🥗", "🍲"] as const;
+export const DISHES_PER_DAY = DISH_SLOTS.length;
+export const WEEKDAYS = ["周一", "周二", "周三", "周四", "周五", "周六"] as const;
+
 export type MemberRole = "yeye" | "nainai" | "baba" | "mama" | "baby";
 
 export interface MemberRow {
@@ -12,6 +17,7 @@ export interface MemberRow {
     allergies?: string[];
     intolerances?: string[];
     goals?: string[];
+    preferences?: string[];
     notes?: string;
   };
 }

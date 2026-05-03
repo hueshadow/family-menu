@@ -20,7 +20,11 @@ export default async function MamaHome() {
         <Badge variant="outline">手动录入 (M2)</Badge>
       </div>
 
-      <MenuEditor weekId={week.id} initialDays={week.days} />
+      <MenuEditor
+        weekId={week.id}
+        weekStart={week.week_start}
+        initialDays={week.days}
+      />
     </div>
   );
 }
