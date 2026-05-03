@@ -133,6 +133,97 @@ export async function getOrCreateWeek(weekStart: Date): Promise<WeekRow> {
   return created;
 }
 
+export interface HealthReportRow {
+  id: string;
+  member_id: string;
+  year: number | null;
+  storage_path: string;
+  ocr_used: boolean;
+  parsed: Record<string, unknown> | null;
+  created_at: string;
+}
+
+export interface DietaryProfileRow {
+  id: string;
+  member_id: string;
+  version: number;
+  tags: string[];
+  recommend: string[];
+  avoid: string[];
+  rationale: string | null;
+  generated_at: string;
+}
+
+export async function insertHealthReport(args: {
+  memberId: string;
+  year: number | null;
+  storagePath: string;
+  ocrUsed: boolean;
+  parsed: Record<string, unknown>;
+}): Promise<string> {
+  const rows = await query<{ id: string }>(
+    `insert into health_reports (member_id, year, storage_path, ocr_used, parsed)
+     values ($1, $2, $3, $4, $5::jsonb) returning id`,
+    [args.memberId, args.year, args.storagePath, args.ocrUsed, JSON.stringify(args.parsed)],
+  );
+  return rows[0].id;
+}
+
+export async function getReportsByMember(memberId: string): Promise<HealthReportRow[]> {
+  return query<HealthReportRow>(
+    `select id, member_id, year, storage_path, ocr_used, parsed, created_at::text as created_at
+     from health_reports where member_id = $1 order by created_at desc`,
+    [memberId],
+  );
+}
+
+export async function getAllReports(): Promise<HealthReportRow[]> {
+  return query<HealthReportRow>(
+    `select id, member_id, year, storage_path, ocr_used, parsed, created_at::text as created_at
+     from health_reports order by created_at desc`,
+  );
+}
+
+export async function upsertDietaryProfile(args: {
+  memberId: string;
+  tags: string[];
+  recommend: string[];
+  avoid: string[];
+  rationale: string | null;
+}): Promise<void> {
+  // Bump version: get max + 1, archive older if needed (we just keep all rows; latest by version is current)
+  const rows = await query<{ max: number | null }>(
+    `select max(version) as max from dietary_profiles where member_id = $1`,
+    [args.memberId],
+  );
+  const nextVersion = (rows[0]?.max ?? 0) + 1;
+  await query(
+    `insert into dietary_profiles (member_id, version, tags, recommend, avoid, rationale)
+     values ($1, $2, $3, $4, $5, $6)`,
+    [args.memberId, nextVersion, args.tags, args.recommend, args.avoid, args.rationale],
+  );
+}
+
+export async function getLatestDietaryProfiles(): Promise<DietaryProfileRow[]> {
+  return query<DietaryProfileRow>(
+    `select distinct on (member_id)
+       id, member_id, version, tags, recommend, avoid, rationale,
+       generated_at::text as generated_at
+     from dietary_profiles
+     order by member_id, version desc`,
+  );
+}
+
+export async function getLatestDietaryProfileFor(memberId: string): Promise<DietaryProfileRow | null> {
+  const rows = await query<DietaryProfileRow>(
+    `select id, member_id, version, tags, recommend, avoid, rationale,
+       generated_at::text as generated_at
+     from dietary_profiles where member_id = $1 order by version desc limit 1`,
+    [memberId],
+  );
+  return rows[0] ?? null;
+}
+
 export interface RecipeRow {
   name: string;
   steps: string;

@@ -1,20 +1,33 @@
 "use server";
 
+import { readdir, stat } from "node:fs/promises";
+import { join } from "node:path";
 import { revalidatePath } from "next/cache";
 import {
   aggregateAndStoreShoppingList,
+  getAllReports,
+  getLatestDietaryProfiles,
   getMembers,
   getRecentWeeksMenu,
+  getReportsByMember,
+  insertHealthReport,
   query,
   saveWeek,
   setShoppingItemChecked,
+  upsertDietaryProfile,
 } from "@/lib/db";
+import {
+  deriveDietaryProfile,
+  parseHealthReportFromFile,
+  type HealthReportParsed,
+} from "@/lib/health";
 import {
   generateRecipe,
   generateWeekMenu,
   getDishCandidates,
 } from "@/lib/menu-gen";
-import { type DayInput } from "@/lib/shared";
+import { getPdfPageCount } from "@/lib/pdf";
+import { type DayInput, type MemberRole } from "@/lib/shared";
 import { DISH_SLOTS } from "@/lib/shared";
 
 export async function saveWeekAction(weekId: string, days: DayInput[]) {
@@ -41,7 +54,21 @@ export async function generateWeekAction(
   weekStart: string,
 ): Promise<{ ok: true; days: DayInput[] } | { ok: false; error: string }> {
   try {
-    const members = await getMembers();
+    const [members, profiles] = await Promise.all([
+      getMembers(),
+      getLatestDietaryProfiles(),
+    ]);
+    const dietary = new Map(
+      profiles.map((p) => [
+        p.member_id,
+        {
+          tags: p.tags,
+          recommend: p.recommend,
+          avoid: p.avoid,
+          rationale: p.rationale,
+        },
+      ]),
+    );
     const startDate = new Date(weekStart);
     const recent = await getRecentWeeksMenu(startDate, 3);
     const recentDishes = Array.from(
@@ -56,6 +83,7 @@ export async function generateWeekAction(
       members,
       weekDates,
       recentDishes,
+      dietary,
     });
     await saveWeek(weekId, days);
     await aggregateAndStoreShoppingList(weekId, days);
@@ -92,15 +120,144 @@ export async function getCandidatesAction(opts: {
         ),
       )
       .filter(Boolean);
-    const members = await getMembers();
+    const [members, profiles] = await Promise.all([
+      getMembers(),
+      getLatestDietaryProfiles(),
+    ]);
+    const dietary = new Map(
+      profiles.map((p) => [
+        p.member_id,
+        {
+          tags: p.tags,
+          recommend: p.recommend,
+          avoid: p.avoid,
+          rationale: p.rationale,
+        },
+      ]),
+    );
     const candidates = await getDishCandidates({
       members,
       slot,
       currentName,
       todayOtherDishes,
       weekOtherDishes,
+      dietary,
     });
     return { ok: true, candidates };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+// ========== Health reports ==========
+
+export interface ReportFileSummary {
+  filename: string;
+  size: number;
+  pages: number;
+  guessedRole: MemberRole | null;
+  alreadyProcessed: boolean;
+}
+
+const ROLE_KEYWORDS: Array<[MemberRole, string[]]> = [
+  ["yeye", ["爷爷"]],
+  ["nainai", ["奶奶"]],
+  ["mama", ["妈妈"]],
+  ["baba", ["爸爸"]],
+  ["baby", ["宝宝", "婴儿", "幼儿"]],
+];
+
+function guessRoleFromName(filename: string): MemberRole | null {
+  for (const [role, keys] of ROLE_KEYWORDS) {
+    if (keys.some((k) => filename.includes(k))) return role;
+  }
+  return null;
+}
+
+export async function listReportFilesAction(): Promise<ReportFileSummary[]> {
+  const dir = process.env.HEALTH_REPORTS_DIR;
+  if (!dir) return [];
+  let names: string[];
+  try {
+    names = await readdir(dir);
+  } catch {
+    return [];
+  }
+  const pdfs = names.filter((n) => n.toLowerCase().endsWith(".pdf"));
+  const allReports = await getAllReports();
+  const processedPaths = new Set(allReports.map((r) => r.storage_path));
+  const result: ReportFileSummary[] = [];
+  for (const f of pdfs) {
+    const fp = join(dir, f);
+    const s = await stat(fp);
+    const pages = await getPdfPageCount(fp).catch(() => 0);
+    result.push({
+      filename: f,
+      size: s.size,
+      pages,
+      guessedRole: guessRoleFromName(f),
+      alreadyProcessed: processedPaths.has(fp),
+    });
+  }
+  return result;
+}
+
+export async function processReportAction(opts: {
+  memberId: string;
+  filename: string;
+}): Promise<
+  | { ok: true; abnormalCount: number; ocrUsed: boolean; profileTags: string[] }
+  | { ok: false; error: string }
+> {
+  try {
+    const dir = process.env.HEALTH_REPORTS_DIR;
+    if (!dir) throw new Error("HEALTH_REPORTS_DIR not set");
+    const filepath = join(dir, opts.filename);
+    const members = await getMembers();
+    const member = members.find((m) => m.id === opts.memberId);
+    if (!member) throw new Error("member not found");
+
+    const { extractPdfText } = await import("@/lib/pdf");
+    const probeText = await extractPdfText(filepath);
+    const ocrUsed = probeText === null;
+
+    const parsed = await parseHealthReportFromFile(filepath, {
+      name: member.name,
+      age: member.age,
+    });
+    await insertHealthReport({
+      memberId: opts.memberId,
+      year: parsed.reportYear ?? null,
+      storagePath: filepath,
+      ocrUsed,
+      parsed: parsed as unknown as Record<string, unknown>,
+    });
+
+    // Re-derive dietary profile from ALL reports for this member
+    const reportRows = await getReportsByMember(opts.memberId);
+    const allParsed: HealthReportParsed[] = reportRows
+      .map((r) => r.parsed as unknown as HealthReportParsed)
+      .filter(Boolean);
+    const profile = await deriveDietaryProfile({
+      member,
+      reports: allParsed,
+    });
+    await upsertDietaryProfile({
+      memberId: opts.memberId,
+      tags: profile.tags,
+      recommend: profile.recommend,
+      avoid: profile.avoid,
+      rationale: profile.rationale ?? null,
+    });
+
+    revalidatePath("/mama/reports");
+    revalidatePath("/mama/family");
+    return {
+      ok: true,
+      abnormalCount: parsed.abnormal_summary.length,
+      ocrUsed,
+      profileTags: profile.tags,
+    };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : String(e) };
   }

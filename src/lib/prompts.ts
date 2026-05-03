@@ -1,5 +1,12 @@
 import { DISH_SLOTS, type MemberRow } from "@/lib/shared";
 
+export interface DietaryProfileForPrompt {
+  tags: string[];
+  recommend: string[];
+  avoid: string[];
+  rationale: string | null;
+}
+
 export const SYSTEM_NUTRITIONIST = `你是一位苏州本帮 / 江浙菜厨师 + 营养师，为一个 5 口家庭设计家常菜单。
 
 【菜系定位】
@@ -25,7 +32,10 @@ export const SYSTEM_NUTRITIONIST = `你是一位苏州本帮 / 江浙菜厨师 +
 
 【输出语言】简体中文。食材字段格式："鲈鱼 1 条, 葱姜适量, 蒸鱼豉油"。`;
 
-export function describeFamily(members: MemberRow[]): string {
+export function describeFamily(
+  members: MemberRow[],
+  dietary?: Map<string, DietaryProfileForPrompt>,
+): string {
   return members
     .map((m) => {
       const lines: string[] = [];
@@ -38,6 +48,14 @@ export function describeFamily(members: MemberRow[]): string {
       if (m.profile.preferences?.length)
         lines.push(`偏好：${m.profile.preferences.join(" / ")}`);
       if (m.profile.notes) lines.push(`备注：${m.profile.notes}`);
+      const dp = dietary?.get(m.id);
+      if (dp) {
+        if (dp.tags.length) lines.push(`处方标签：${dp.tags.join(" / ")}`);
+        if (dp.recommend.length)
+          lines.push(`处方推荐：${dp.recommend.join("；")}`);
+        if (dp.avoid.length) lines.push(`处方忌口：${dp.avoid.join("；")}`);
+        if (dp.rationale) lines.push(`处方依据：${dp.rationale}`);
+      }
       return `- ${m.name}（${m.age}岁）\n  ${lines.join("\n  ")}`;
     })
     .join("\n");
@@ -47,9 +65,10 @@ export function buildWeekPrompt(opts: {
   members: MemberRow[];
   weekDates: string[]; // 6 ISO dates
   recentDishes: string[];
+  dietary?: Map<string, DietaryProfileForPrompt>;
 }): string {
   return `【家庭成员】
-${describeFamily(opts.members)}
+${describeFamily(opts.members, opts.dietary)}
 
 【本周日期】
 ${opts.weekDates.join(", ")}（周一—周六）
@@ -84,9 +103,10 @@ export function buildCandidatesPrompt(opts: {
   currentName: string;
   todayOtherDishes: string[];
   weekOtherDishes: string[];
+  dietary?: Map<string, DietaryProfileForPrompt>;
 }): string {
   return `【家庭成员】
-${describeFamily(opts.members)}
+${describeFamily(opts.members, opts.dietary)}
 
 【场景】
 本周菜单中有一道 ${opts.slot}「${opts.currentName}」需要替换。

@@ -14,7 +14,8 @@
     "seed": "node --env-file=.env.local scripts/seed.mjs",
     "smoke": "node --env-file=.env.local scripts/smoke-menu.mjs",
     "smoke:ai": "node --env-file=.env.local scripts/smoke-ai.mjs",
-    "smoke:gen": "node --env-file=.env.local scripts/smoke-gen.mjs"
+    "smoke:gen": "node --env-file=.env.local scripts/smoke-gen.mjs",
+    "smoke:health": "node --env-file=.env.local scripts/smoke-health.mjs"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.58",

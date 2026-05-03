@@ -6,6 +6,7 @@ import {
   buildRecipePrompt,
   buildWeekPrompt,
   SYSTEM_NUTRITIONIST,
+  type DietaryProfileForPrompt,
 } from "@/lib/prompts";
 import {
   DISH_SLOTS,
@@ -51,6 +52,7 @@ export async function generateWeekMenu(opts: {
   members: MemberRow[];
   weekDates: string[];
   recentDishes: string[];
+  dietary?: Map<string, DietaryProfileForPrompt>;
 }): Promise<DayInput[]> {
   const raw = await chatJson<unknown>({
     model: MODELS.primary,
@@ -81,6 +83,7 @@ export async function getDishCandidates(opts: {
   currentName: string;
   todayOtherDishes: string[];
   weekOtherDishes: string[];
+  dietary?: Map<string, DietaryProfileForPrompt>;
 }) {
   const raw = await chatJson<unknown>({
     model: MODELS.primary,
