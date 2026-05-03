@@ -64,16 +64,23 @@ export async function query<T = Record<string, unknown>>(
 // ---------- date helpers ----------
 
 export function mondayOf(d: Date = new Date()): Date {
+  // Sunday → next Monday (the menu is for Mon–Sat, so Sunday should preview "tomorrow's week")
+  // Mon–Sat → that same week's Monday
   const x = new Date(d);
   x.setHours(0, 0, 0, 0);
   const dow = x.getDay(); // 0 Sun..6 Sat
-  const diff = dow === 0 ? -6 : 1 - dow;
+  const diff = dow === 0 ? 1 : 1 - dow;
   x.setDate(x.getDate() + diff);
   return x;
 }
 
 export function isoDate(d: Date): string {
-  return d.toISOString().slice(0, 10);
+  // Local-timezone YYYY-MM-DD (UTC slice is wrong in UTC+8 — Sunday 22:00 local is Sunday 14:00 UTC,
+  // but `toISOString().slice(0,10)` returns the UTC date which after a midnight reset is off by one).
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
 export function weekDates(weekStart: Date): Date[] {

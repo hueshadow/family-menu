@@ -32,6 +32,13 @@ export function getSchedulerState(): { started: boolean; lastRun: string | null 
   );
 }
 
+function localDateKey(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 async function tick(): Promise<void> {
   const now = new Date();
   const dow = now.getDay(); // 0 = Sunday
@@ -44,16 +51,16 @@ async function tick(): Promise<void> {
   tomorrow.setHours(0, 0, 0, 0);
   tomorrow.setDate(tomorrow.getDate() + 1); // Monday
 
-  const isoMonday = tomorrow.toISOString().slice(0, 10);
-  const todayKey = `${now.toISOString().slice(0, 10)}-${hour}`;
+  const isoMonday = localDateKey(tomorrow);
+  const todayLocal = localDateKey(now);
   const state = globalThis.__familyMenuScheduler;
-  if (state?.lastRun?.startsWith(now.toISOString().slice(0, 10))) {
+  if (state?.lastRun?.startsWith(todayLocal)) {
     return; // already ran today
   }
 
   console.log(`[scheduler] running auto-generation for week ${isoMonday}`);
   const { runAutoWeekGeneration } = await import("@/lib/auto-gen");
   const result = await runAutoWeekGeneration(tomorrow);
-  if (state) state.lastRun = `${todayKey}:${result.status}`;
+  if (state) state.lastRun = `${todayLocal}-${hour}:${result.status}`;
   console.log(`[scheduler] result:`, result);
 }
