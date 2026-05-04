@@ -56,38 +56,38 @@
  * - 墙红  #8B5A4B  destructive / warning (wall red)
  */
 :root {
-  --background: #FAF3E7;
+  --background: #F4E8CD;          /* cream — visibly warm */
   --foreground: #2D2418;
-  --card: #FFFAF0;
+  --card: #FFF8E5;                /* slightly lighter than bg, pops up */
   --card-foreground: #2D2418;
-  --popover: #FFFAF0;
+  --popover: #FFF8E5;
   --popover-foreground: #2D2418;
-  --primary: #6B8E5A;
-  --primary-foreground: #FAF3E7;
-  --secondary: #E8DCC4;
+  --primary: #5A7A4A;              /* deeper tea green */
+  --primary-foreground: #FFF8E5;
+  --secondary: #E8DCC4;            /* terracotta clay */
   --secondary-foreground: #2D2418;
-  --muted: #F0E6D0;
-  --muted-foreground: #8C7A60;
-  --accent: #93B17A;
-  --accent-foreground: #FAF3E7;
-  --destructive: #8B5A4B;
-  --border: #E0CFA8;
-  --input: #DCC9A6;
-  --ring: #6B8E5A;
-  --chart-1: #6B8E5A;
-  --chart-2: #8B5A4B;
+  --muted: #EAD9B3;
+  --muted-foreground: #6F5C40;
+  --accent: #88A872;
+  --accent-foreground: #FFF8E5;
+  --destructive: #A65D45;          /* warmer wall red */
+  --border: #C9B68A;
+  --input: #C9B68A;
+  --ring: #5A7A4A;
+  --chart-1: #5A7A4A;
+  --chart-2: #A65D45;
   --chart-3: #C9A86F;
-  --chart-4: #93B17A;
-  --chart-5: #C58A6E;
+  --chart-4: #88A872;
+  --chart-5: #D38A5C;
   --radius: 0.75rem;
-  --sidebar: #F5ECD7;
+  --sidebar: #EFE0BD;
   --sidebar-foreground: #2D2418;
-  --sidebar-primary: #6B8E5A;
-  --sidebar-primary-foreground: #FAF3E7;
+  --sidebar-primary: #5A7A4A;
+  --sidebar-primary-foreground: #FFF8E5;
   --sidebar-accent: #E8DCC4;
   --sidebar-accent-foreground: #2D2418;
-  --sidebar-border: #DCC9A6;
-  --sidebar-ring: #6B8E5A;
+  --sidebar-border: #C9B68A;
+  --sidebar-ring: #5A7A4A;
 
   --font-display:
     "Songti SC", "STSong", "Noto Serif SC", "STKaiti", "PingFang SC",
@@ -148,10 +148,10 @@
     font-weight: 500;
     letter-spacing: 0.01em;
   }
-  /* Subtle paper-grain background on the body */
+  /* Warm radial accents on the body — visible cream + tea-green hint */
   body {
     background-image:
-      radial-gradient(at 20% 0%, rgba(232, 220, 196, 0.4) 0, transparent 50%),
-      radial-gradient(at 80% 100%, rgba(107, 142, 90, 0.08) 0, transparent 50%);
+      radial-gradient(at 15% 0%, rgba(200, 175, 130, 0.35) 0, transparent 55%),
+      radial-gradient(at 85% 100%, rgba(90, 122, 74, 0.12) 0, transparent 50%);
   }
 }
