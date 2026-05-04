@@ -51,10 +51,12 @@ PDF 上传 → 文本/视觉 OCR → AI 结构化 → 饮食处方
 | 里程碑 | 内容 | 状态 |
 |---|---|---|
 | **M1** | 脚手架、三角色路由骨架、文档冻结 | ✅ |
-| **M2** | 家庭档案表单、手动菜单录入、采购清单聚合（不接 AI 也能用） | ⏳ |
-| **M3** | AI 一键生成菜单 + 3 候选替换 + 做法生成入库 | ⏳ |
-| **M4** | 体检 PDF 上传 + 解析 + 饮食处方 | ⏳ |
-| **M5** | 营养分析 / 替代食材 / 生鲜平台对接 β | ⏳ |
+| **M2** | 家庭档案、手动菜单录入、采购清单聚合 | ✅ |
+| **M3** | AI 一键生成菜单 + 3 候选替换 + 做法生成入库 | ✅ |
+| **M4** | 体检 PDF 解析（数字 / 扫描）+ 饮食处方 | ✅ |
+| **M5** | 营养分析 + 历史 + 替代食材 + 平台搜索链 | ✅ |
+| **+** | 时令食材 + 营养趋势 + 周日自动调度 + launchd 自启 | ✅ |
+| **+** | 温暖餐桌调主题 | ✅ |
 
 ## 本地启动
 
@@ -82,7 +84,31 @@ npm run build
 npm run start:lan   # 比 dev 快，资源占用低
 ```
 
-要让它在 Mac 重启后自动起，可后续配 `pm2` 或 `launchd`，按需再加。
+### Mac 重启后自动恢复（launchd）
+
+```bash
+# 一次性安装：
+bash scripts/launchd/install.sh
+
+# 状态：
+bash scripts/launchd/status.sh
+
+# 查看日志：
+tail -F ~/Library/Logs/family-menu.{out,err}.log
+
+# 卸载：
+bash scripts/launchd/uninstall.sh
+```
+
+`install.sh` 会把 plist 复制到 `~/Library/LaunchAgents/`、替换路径占位符并立即启动。崩溃后 launchd 会自动重启。
+
+### 批量解析体检报告
+
+```bash
+npm run batch:reports   # 一次跑完 ~/Documents/family-menu-data/体检报告/ 中的全部 PDF
+```
+
+文件名含「爷爷/奶奶/妈妈/爸爸/陆喆霆/宝宝」会自动认人；数字版走 `pdftotext`，扫描件走 `pdftoppm` + 视觉模型 OCR；每位成员合成饮食处方写入 `dietary_profiles`。
 
 ## 凭据安全清单
 
@@ -95,17 +121,40 @@ npm run start:lan   # 比 dev 快，资源占用低
 ```
 src/
 ├─ app/
-│  ├─ page.tsx              角色切换首页
-│  ├─ (mama)/               妈妈视图（菜单审核 / 家庭档案 / 体检报告）
-│  ├─ (naina)/              奶奶视图（采购清单）
-│  ├─ (ayi)/                阿姨视图（今日菜单）
-│  └─ api/                  服务端（AI 代理 / Supabase 操作）
+│  ├─ page.tsx              首页 · 角色切换
+│  ├─ mama/                 妈妈：本周菜单 / 历史 / 营养趋势 / 家庭档案 / 体检报告
+│  ├─ naina/                奶奶：采购清单
+│  ├─ ayi/                  阿姨：今日菜单
+│  ├─ actions.ts            Server Actions
+│  └─ api/health/           健康探针
+├─ components/
+│  ├─ ui/                   shadcn 组件
+│  ├─ menu-editor.tsx       6×5 菜单网格 + AI 生成 + 营养分析弹窗
+│  ├─ shopping-list.tsx     按品类勾选 + 平台搜索链
+│  ├─ recipe-block.tsx      做法懒加载
+│  ├─ substitute-helper.tsx 替代食材弹窗
+│  └─ report-row.tsx        体检报告处理行
 ├─ lib/
-│  ├─ ai.ts                 AI 客户端（OpenAI 兼容）
-│  ├─ supabase.ts           Supabase 客户端（browser/server）
-│  ├─ schema.ts             Zod 类型
-│  └─ db.sql                Supabase schema 迁移
-└─ types/
+│  ├─ ai-server.ts          AI HTTP 客户端（OpenAI 兼容）
+│  ├─ db.ts                 Postgres 连接池 + 数据访问
+│  ├─ db.sql                Supabase 迁移脚本
+│  ├─ shared.ts             类型 / 常量（客户端可用）
+│  ├─ schema.ts             Zod 验证
+│  ├─ prompts.ts            AI 提示词集合
+│  ├─ menu-gen.ts           菜单 / 候选 / 做法 / 营养 / 替代生成
+│  ├─ health.ts             体检报告解析 + 处方推导
+│  ├─ pdf.ts                PDF 文本/视觉路径
+│  ├─ seasonal.ts           苏州 12 月时令食材
+│  ├─ scheduler.ts          周日 22:00 自动调度
+│  └─ auto-gen.ts           自动生成下周菜单
+└─ instrumentation.ts       Next.js 启动钩子（启 scheduler）
+
+scripts/
+├─ migrate.mjs              schema 迁移
+├─ seed.mjs                 5 名家庭成员 seed
+├─ batch-process-reports.mjs 批量解析体检报告
+├─ smoke-*.mjs              端到端冒烟
+└─ launchd/                 macOS 自启服务
 ```
 
 体检 PDF 默认路径：`~/Documents/family-menu-data/体检报告/`（环境变量 `HEALTH_REPORTS_DIR` 可改）。

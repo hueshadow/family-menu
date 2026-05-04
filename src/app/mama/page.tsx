@@ -12,24 +12,24 @@ export default async function MamaHome() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between">
-        <div>
-          <h3 className="text-2xl font-semibold">本周菜单</h3>
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-1">
+          <h3 className="font-display text-3xl tracking-wide">本周菜单</h3>
           <p className="text-sm text-muted-foreground">
             {week.days[0].date} – {week.days[5].date} · 周一至周六 · 每天 5 道菜
           </p>
           {seasonal ? (
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-2 max-w-xl text-xs leading-relaxed text-muted-foreground/90">
               🌱 {seasonal}
             </p>
           ) : null}
         </div>
-        <div className="flex flex-col items-end gap-1">
+        <div className="flex shrink-0 flex-col items-end gap-1.5">
           {week.auto_generated ? (
-            <Badge>🤖 AI 自动生成</Badge>
+            <Badge className="text-xs">🤖 AI 自动生成</Badge>
           ) : null}
-          <span className="text-xs text-muted-foreground">
-            🕘 自动生成：周日 22:00（如本周空缺）
+          <span className="text-xs text-muted-foreground/80">
+            🕘 周日 22:00 自动生成
           </span>
         </div>
       </div>

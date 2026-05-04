@@ -182,25 +182,27 @@ export function MenuEditor({
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {days.map((day, di) => (
-          <Card key={day.date}>
-            <CardHeader className="flex-row items-baseline justify-between">
-              <CardTitle className="text-base">{WEEKDAYS[di]}</CardTitle>
-              <span className="text-xs text-muted-foreground">
+          <Card key={day.date} className="border-border/70 bg-card">
+            <CardHeader className="flex-row items-baseline justify-between border-b border-border/40 pb-3">
+              <CardTitle className="font-display text-xl tracking-wide">
+                {WEEKDAYS[di]}
+              </CardTitle>
+              <span className="font-mono text-xs text-muted-foreground">
                 {day.date.slice(5)}
               </span>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-3 pt-4">
               {day.dishes.map((dish, dishi) => (
                 <div key={dishi} className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs text-muted-foreground">
+                    <label className="text-xs font-medium tracking-wider text-muted-foreground">
                       {DISH_SLOTS[dishi]}
                     </label>
                     {dish.name.trim() ? (
                       <button
                         type="button"
                         onClick={() => openReplace(di, dishi)}
-                        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                        className="flex items-center gap-1 text-xs text-muted-foreground transition hover:text-primary"
                       >
                         <Wand2 className="size-3" /> 换一道
                       </button>
