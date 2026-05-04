@@ -15,13 +15,12 @@
     "smoke": "node --env-file=.env.local scripts/smoke-menu.mjs",
     "smoke:ai": "node --env-file=.env.local scripts/smoke-ai.mjs",
     "smoke:gen": "node --env-file=.env.local scripts/smoke-gen.mjs",
-    "smoke:health": "node --env-file=.env.local scripts/smoke-health.mjs"
+    "smoke:health": "node --env-file=.env.local scripts/smoke-health.mjs",
+    "batch:reports": "node --env-file=.env.local scripts/batch-process-reports.mjs"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^3.0.58",
     "@base-ui/react": "^1.4.1",
     "@supabase/supabase-js": "^2.105.1",
-    "ai": "^6.0.174",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.14.0",
