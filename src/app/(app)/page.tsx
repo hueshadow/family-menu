@@ -1,10 +1,9 @@
 import { access } from "node:fs/promises";
 import { join } from "node:path";
 import Link from "next/link";
-import { ArrowRight, BookOpen, Clipboard, ClipboardList, LineChart, Sparkles, Users, Utensils } from "lucide-react";
+import { ArrowRight, BookOpen, Clipboard, ClipboardList, LineChart, Users, Utensils } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ShareButton } from "@/components/share-button";
 import {
   getOrCreateWeek,
   getShoppingListByWeekStart,
@@ -13,7 +12,6 @@ import {
 } from "@/lib/db";
 import { DISH_PHOTOS_DIR } from "@/lib/dish-photos";
 import { describeSeasonal } from "@/lib/seasonal";
-import { formatDayMenu, formatShoppingList, formatWeekMenu } from "@/lib/share-formatter";
 import { DISH_ICONS, WEEKDAYS } from "@/lib/shared";
 import { TABLE_PHOTOS_DIR } from "@/lib/table-photo";
 
@@ -84,20 +82,11 @@ export default async function Home() {
 
       {/* Today */}
       <Card className="overflow-hidden border-border/70 bg-card">
-        <CardHeader className="flex flex-row items-baseline justify-between border-b border-border/40">
+        <CardHeader className="border-b border-border/40">
           <CardTitle className="flex items-baseline gap-2 text-lg">
             <Utensils className="size-4 text-primary" />
             <span className="font-display text-xl">今日 · {todayLabel}</span>
           </CardTitle>
-          {today && today.dishes.some((d) => d.name.trim()) ? (
-            <ShareButton
-              text={formatDayMenu(today)}
-              title="今日菜单"
-              label="分享至微信"
-              size="sm"
-              variant="outline"
-            />
-          ) : null}
         </CardHeader>
         {!today ? (
           <CardContent className="pt-4 text-sm">
@@ -164,20 +153,21 @@ export default async function Home() {
 
       {/* Week menu summary */}
       <Card className="border-border/70 bg-card">
-        <CardHeader className="flex flex-row items-baseline justify-between border-b border-border/40">
+        <CardHeader className="flex flex-row items-center justify-between border-b border-border/40">
           <CardTitle className="flex items-baseline gap-2">
             <BookOpen className="size-4 text-primary" />
             <span className="font-display text-xl">
               本周菜单 · {week.days[0].date.slice(5)}–{week.days[5].date.slice(5)}
             </span>
           </CardTitle>
-          <div className="flex items-center gap-2">
-            {week.auto_generated ? (
-              <Badge variant="secondary" className="text-xs">
-                <Sparkles className="mr-1 size-3" /> AI 自动生成
-              </Badge>
-            ) : null}
-          </div>
+          <Link
+            href="/shopping"
+            className="inline-flex items-center gap-1.5 rounded-md border border-border/60 bg-card px-3 py-1.5 text-xs text-muted-foreground transition hover:border-primary/50 hover:bg-primary/5 hover:text-primary"
+          >
+            <ClipboardList className="size-3.5" />
+            采购清单
+            <ArrowRight className="size-3" />
+          </Link>
         </CardHeader>
         <CardContent className="space-y-4 pt-4">
           {week.days.map((day, dayIdx) => {
@@ -244,13 +234,6 @@ export default async function Home() {
           })}
         </CardContent>
         <CardContent className="flex flex-wrap items-center gap-3 border-t border-border/40 py-3 text-xs text-muted-foreground">
-          <ShareButton
-            text={formatWeekMenu(week.days)}
-            title="本周菜单"
-            label="分享本周"
-            size="sm"
-            variant="outline"
-          />
           <Link
             href="/menu"
             className="inline-flex items-center gap-1 hover:text-primary"
@@ -290,15 +273,6 @@ export default async function Home() {
             </>
           )}
           <div className="flex flex-wrap items-center gap-2">
-            {list ? (
-              <ShareButton
-                text={formatShoppingList(list.items, { onlyUnchecked: true })}
-                title="采购清单"
-                label="分享至微信"
-                size="sm"
-                variant="outline"
-              />
-            ) : null}
             <Link
               href="/shopping"
               className="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-sm text-muted-foreground transition hover:bg-secondary hover:text-foreground"

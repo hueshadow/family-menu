@@ -1,10 +1,8 @@
 "use client";
 
 import { useOptimistic, useTransition } from "react";
-import { ShareButton } from "@/components/share-button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toggleShoppingItemAction } from "@/app/actions";
-import { formatShoppingList } from "@/lib/share-formatter";
 import { CATEGORY_LABELS, type ShoppingItem } from "@/lib/shared";
 
 const PLATFORMS: Array<{ label: string; build: (q: string) => string }> = [
@@ -89,14 +87,6 @@ export function ShoppingList({
           />
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-3">
-          <ShareButton
-            text={() =>
-              formatShoppingList(optimisticItems, { onlyUnchecked: true })
-            }
-            title="本周采购清单"
-            label="分享至微信"
-            size="sm"
-          />
           <button
             type="button"
             onClick={onCopyAll}
