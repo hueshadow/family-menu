@@ -2,6 +2,7 @@ import { access } from "node:fs/promises";
 import { join } from "node:path";
 import Link from "next/link";
 import { ArrowRight, ClipboardList, Sunrise, Utensils } from "lucide-react";
+import { DownloadCardImageButton } from "@/components/download-card-image-button";
 import { DownloadImageButton } from "@/components/download-image-button";
 // Smart day card: before 13:00 → today's menu (label "今日");
 // from 13:00 onward → tomorrow's menu (label "明日"). Rolls into next day at midnight.
@@ -103,7 +104,7 @@ export default async function Home() {
       {/* Smart day card — today before 13:00, otherwise tomorrow.
           Auto-rolls at midnight & 13:00 since this is a server component
           rendered on each request. */}
-      <Card className="overflow-hidden border-border/70 bg-card">
+      <Card id="smart-day-menu-card" className="overflow-hidden border-border/70 bg-card">
         <CardHeader className="flex flex-row items-center justify-between border-b border-border/40">
           <CardTitle className="flex items-baseline gap-2">
             {showTomorrow ? (
@@ -116,9 +117,9 @@ export default async function Home() {
             </span>
           </CardTitle>
           {target ? (
-            <div className="flex items-center gap-2">
-              <DownloadImageButton
-                url={`/api/photo/day-board/${targetIso}`}
+            <div data-image-export-hidden className="flex items-center gap-2">
+              <DownloadCardImageButton
+                targetId="smart-day-menu-card"
                 filename={`${targetIso}-${targetTitle}菜单.png`}
                 label={`${targetTitle}图片`}
               />

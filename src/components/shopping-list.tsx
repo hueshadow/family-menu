@@ -1,6 +1,8 @@
 "use client";
 
 import { useOptimistic, useTransition } from "react";
+import { Share2 } from "lucide-react";
+import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toggleShoppingItemAction } from "@/app/actions";
 import { CATEGORY_LABELS, type ShoppingItem } from "@/lib/shared";
@@ -69,6 +71,37 @@ export function ShoppingList({
       )
       .join("\n\n");
     navigator.clipboard.writeText(text);
+    toast.success("采购清单已复制");
+  };
+
+  const onShareList = async () => {
+    const shareUrl = window.location.href;
+    const shareData = {
+      title: document.title || "家庭采购清单",
+      text: "打开后可直接勾选采购清单",
+      url: shareUrl,
+    };
+
+    try {
+      if (navigator.share && (!navigator.canShare || navigator.canShare(shareData))) {
+        await navigator.share(shareData);
+        return;
+      }
+
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success("清单链接已复制，可直接发到微信");
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        toast.success("分享已取消，链接已复制");
+      } catch {
+        toast.error("当前设备不支持直接分享，请手动复制地址栏链接");
+      }
+    }
   };
 
   return (
@@ -87,6 +120,14 @@ export function ShoppingList({
           />
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={onShareList}
+            className="inline-flex items-center gap-1.5 rounded-md border border-border/60 bg-card px-3 py-1.5 text-xs text-muted-foreground transition hover:border-primary/50 hover:bg-primary/5 hover:text-primary"
+          >
+            <Share2 className="size-3.5" />
+            分享清单
+          </button>
           <button
             type="button"
             onClick={onCopyAll}
