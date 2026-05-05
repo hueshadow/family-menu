@@ -1,15 +1,10 @@
 import { access } from "node:fs/promises";
 import { join } from "node:path";
 import Link from "next/link";
-import { ArrowRight, BookOpen, Clipboard, ClipboardList, LineChart, Users, Utensils } from "lucide-react";
+import { ArrowRight, ClipboardList, Sunrise, Utensils } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  getOrCreateWeek,
-  getShoppingListByWeekStart,
-  isoDate,
-  mondayOf,
-} from "@/lib/db";
+import { getOrCreateWeek, isoDate, mondayOf } from "@/lib/db";
 import { DISH_PHOTOS_DIR } from "@/lib/dish-photos";
 import { describeSeasonal } from "@/lib/seasonal";
 import { DISH_ICONS, WEEKDAYS } from "@/lib/shared";
@@ -20,7 +15,6 @@ export const dynamic = "force-dynamic";
 export default async function Home() {
   const monday = mondayOf();
   const week = await getOrCreateWeek(monday);
-  const list = await getShoppingListByWeekStart(monday);
   const seasonal = describeSeasonal();
 
   const todayIso = isoDate(new Date());
@@ -40,6 +34,43 @@ export default async function Home() {
     }
   }
 
+  // Tomorrow preview (so the cook can prep ingredients in advance)
+  const tomorrowDate = new Date();
+  tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+  const tomorrowIso = isoDate(tomorrowDate);
+  const tomorrow = week.days.find((d) => d.date === tomorrowIso) ?? null;
+  const tomorrowDayIdx = tomorrow
+    ? week.days.findIndex((d) => d.date === tomorrowIso)
+    : -1;
+  const tomorrowLabel = tomorrowDate.toLocaleDateString("zh-CN", {
+    month: "long",
+    day: "numeric",
+    weekday: "long",
+  });
+  let hasTomorrowTablePhoto = false;
+  if (tomorrow) {
+    try {
+      await access(join(TABLE_PHOTOS_DIR, `${tomorrowIso}.png`));
+      hasTomorrowTablePhoto = true;
+    } catch {
+      hasTomorrowTablePhoto = false;
+    }
+  }
+  const tomorrowDishPhotos = tomorrow
+    ? await Promise.all(
+        tomorrow.dishes.map(async (_dish, dishIdx) => {
+          try {
+            await access(
+              join(DISH_PHOTOS_DIR, `d${tomorrowDayIdx + 1}-s${dishIdx}.png`),
+            );
+            return true;
+          } catch {
+            return false;
+          }
+        }),
+      )
+    : [];
+
   const weekDishPhotos = await Promise.all(
     week.days.map(async (day, dayIdx) =>
       Promise.all(
@@ -55,12 +86,9 @@ export default async function Home() {
     ),
   );
 
-  const filledDays = week.days.filter((d) => d.dishes.some((x) => x.name.trim())).length;
-  const totalItems = list?.items.length ?? 0;
-  const checkedItems = list?.items.filter((i) => i.checked).length ?? 0;
-  const purchasePct = totalItems
-    ? Math.round((checkedItems / totalItems) * 100)
-    : 0;
+  const filledDays = week.days.filter((d) =>
+    d.dishes.some((x) => x.name.trim()),
+  ).length;
 
   return (
     <div className="space-y-8">
@@ -151,14 +179,12 @@ export default async function Home() {
         )}
       </Card>
 
-      {/* Week menu summary */}
-      <Card className="border-border/70 bg-card">
+      {/* Tomorrow preview — so the cook can prep ingredients in advance */}
+      <Card className="overflow-hidden border-border/70 bg-card">
         <CardHeader className="flex flex-row items-center justify-between border-b border-border/40">
           <CardTitle className="flex items-baseline gap-2">
-            <BookOpen className="size-4 text-primary" />
-            <span className="font-display text-xl">
-              本周菜单 · {week.days[0].date.slice(5)}–{week.days[5].date.slice(5)}
-            </span>
+            <Sunrise className="size-4 text-primary" />
+            <span className="font-display text-xl">明日 · {tomorrowLabel}</span>
           </CardTitle>
           <Link
             href="/shopping"
@@ -168,6 +194,101 @@ export default async function Home() {
             采购清单
             <ArrowRight className="size-3" />
           </Link>
+        </CardHeader>
+        {!tomorrow ? (
+          <CardContent className="pt-4 text-sm">
+            <p className="text-muted-foreground">
+              明天是周日 / 计划之外的日子，可休息或自由安排。
+            </p>
+          </CardContent>
+        ) : tomorrow.dishes.every((d) => !d.name.trim()) ? (
+          <CardContent className="pt-4 text-sm">
+            <p className="text-muted-foreground">
+              明日菜单还没生成。
+              <Link
+                href="/menu"
+                className="ml-2 text-primary underline-offset-2 hover:underline"
+              >
+                去 AI 一键生成 →
+              </Link>
+            </p>
+          </CardContent>
+        ) : (
+          <>
+            {hasTomorrowTablePhoto ? (
+              <Link href="/menu" className="block px-6 pt-4">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`/api/photo/table/${tomorrowIso}`}
+                  alt={`明日餐桌：${tomorrow.dishes.map((d) => d.name).filter(Boolean).join("、")}`}
+                  className="aspect-[3/2] w-full rounded-md object-cover transition hover:opacity-95"
+                />
+              </Link>
+            ) : null}
+            <CardContent className="space-y-3 pt-4">
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                明日 {tomorrow.dishes.filter((d) => d.name.trim()).length} 道菜 · 提前确认食材是否齐备
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {tomorrow.dishes.map((dish, i) => {
+                  const dishName = dish.name.trim();
+                  if (!dishName) return null;
+                  const hasPhoto = tomorrowDishPhotos[i];
+                  return (
+                    <div
+                      key={i}
+                      className="flex gap-3 overflow-hidden rounded-md border border-border/50 bg-muted/15 p-2"
+                    >
+                      <div className="size-16 shrink-0 overflow-hidden rounded-md bg-muted">
+                        {hasPhoto ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={`/api/photo/dish/${tomorrowDayIdx + 1}/${i}`}
+                            alt={dishName}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-xl text-muted-foreground/70">
+                            {DISH_ICONS[i]}
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1 text-xs">
+                        <p className="text-sm font-medium leading-snug text-foreground">
+                          {DISH_ICONS[i]} {dishName}
+                        </p>
+                        {dish.ingredients ? (
+                          <p className="mt-1 line-clamp-3 leading-relaxed text-muted-foreground">
+                            {dish.ingredients}
+                          </p>
+                        ) : null}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+            <CardContent className="flex items-center justify-end border-t border-border/40 py-3 text-xs text-muted-foreground">
+              <Link
+                href="/menu"
+                className="inline-flex items-center gap-1 hover:text-primary"
+              >
+                查看一周完整菜单 <ArrowRight className="size-3" />
+              </Link>
+            </CardContent>
+          </>
+        )}
+      </Card>
+
+      {/* Week menu detail (kept here as a secondary block — full grid) */}
+      <Card className="border-border/70 bg-card">
+        <CardHeader className="flex flex-row items-center justify-between border-b border-border/40">
+          <CardTitle className="flex items-baseline gap-2">
+            <Utensils className="size-4 text-primary" />
+            <span className="font-display text-xl">
+              本周菜单 · {week.days[0].date.slice(5)}–{week.days[5].date.slice(5)}
+            </span>
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 pt-4">
           {week.days.map((day, dayIdx) => {
@@ -243,82 +364,9 @@ export default async function Home() {
         </CardContent>
       </Card>
 
-      {/* Shopping summary */}
-      <Card className="border-border/70 bg-card">
-        <CardHeader className="flex flex-row items-baseline justify-between border-b border-border/40">
-          <CardTitle className="flex items-baseline gap-2">
-            <ClipboardList className="size-4 text-primary" />
-            <span className="font-display text-xl">采购清单</span>
-          </CardTitle>
-          <span className="text-sm text-muted-foreground">
-            {checkedItems} / {totalItems}
-          </span>
-        </CardHeader>
-        <CardContent className="space-y-3 pt-4 text-sm">
-          {totalItems === 0 ? (
-            <p className="text-muted-foreground">
-              本周菜单尚未确认，等菜单生成后会自动派生采购清单。
-            </p>
-          ) : (
-            <>
-              <div className="h-2 overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full bg-primary transition-all"
-                  style={{ width: `${purchasePct}%` }}
-                />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                已购 {purchasePct}% · 剩 {totalItems - checkedItems} 项待购
-              </p>
-            </>
-          )}
-          <div className="flex flex-wrap items-center gap-2">
-            <Link
-              href="/shopping"
-              className="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-sm text-muted-foreground transition hover:bg-secondary hover:text-foreground"
-            >
-              勾选已购 <ArrowRight className="size-3" />
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Quick links */}
-      <section className="grid gap-3 sm:grid-cols-3">
-        <QuickLink href="/family" icon={<Users className="size-4" />} title="家庭档案" desc="5 名成员处方 · 体检报告" />
-        <QuickLink href="/trend" icon={<LineChart className="size-4" />} title="营养趋势" desc="近期 7 项指标" />
-        <QuickLink href="/history" icon={<Clipboard className="size-4" />} title="历史菜单" desc="过往 50 周存档" />
-      </section>
-
       <footer className="text-center text-xs text-muted-foreground/70">
         <p>每周日 09:00 自动出下周菜单 · 共 {filledDays} / {week.days.length} 天已编排</p>
       </footer>
     </div>
-  );
-}
-
-function QuickLink({
-  href,
-  icon,
-  title,
-  desc,
-}: {
-  href: string;
-  icon: React.ReactNode;
-  title: string;
-  desc: string;
-}) {
-  return (
-    <Link href={href}>
-      <Card className="h-full border-border/70 bg-card transition hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md">
-        <CardContent className="flex items-center gap-3 p-4 text-sm">
-          <span className="text-primary">{icon}</span>
-          <div>
-            <div className="font-medium">{title}</div>
-            <div className="text-xs text-muted-foreground">{desc}</div>
-          </div>
-        </CardContent>
-      </Card>
-    </Link>
   );
 }
