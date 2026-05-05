@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { ShareButton } from "@/components/share-button";
 import {
   analyzeNutritionAction,
   generateWeekAction,
@@ -22,6 +23,7 @@ import {
   saveWeekAction,
 } from "@/app/actions";
 import type { NutritionAnalysis } from "@/lib/menu-gen";
+import { formatWeekMenu } from "@/lib/share-formatter";
 import { DISH_SLOTS, WEEKDAYS, type DayInput } from "@/lib/shared";
 
 type Candidate = { name: string; ingredients: string; reason?: string };
@@ -154,6 +156,12 @@ export function MenuEditor({
               : "未保存的修改会自动暂存在表单内"}
         </p>
         <div className="flex items-center gap-2">
+          <ShareButton
+            text={() => formatWeekMenu(days)}
+            title="本周菜单"
+            label="分享本周"
+            variant="outline"
+          />
           <Button
             variant="outline"
             onClick={openAnalysis}

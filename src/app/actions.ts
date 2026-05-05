@@ -38,9 +38,9 @@ import { DISH_SLOTS } from "@/lib/shared";
 export async function saveWeekAction(weekId: string, days: DayInput[]) {
   await saveWeek(weekId, days);
   await aggregateAndStoreShoppingList(weekId, days);
-  revalidatePath("/mama");
-  revalidatePath("/naina");
-  revalidatePath("/ayi");
+  revalidatePath("/menu");
+  revalidatePath("/shopping");
+  revalidatePath("/today");
   return { ok: true };
 }
 
@@ -50,7 +50,7 @@ export async function toggleShoppingItemAction(
   checked: boolean,
 ) {
   await setShoppingItemChecked(listId, itemName, checked);
-  revalidatePath("/naina");
+  revalidatePath("/shopping");
   return { ok: true };
 }
 
@@ -92,9 +92,9 @@ export async function generateWeekAction(
     });
     await saveWeek(weekId, days);
     await aggregateAndStoreShoppingList(weekId, days);
-    revalidatePath("/mama");
-    revalidatePath("/naina");
-    revalidatePath("/ayi");
+    revalidatePath("/menu");
+    revalidatePath("/shopping");
+    revalidatePath("/today");
     return { ok: true, days };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : String(e) };
@@ -338,8 +338,8 @@ export async function processReportAction(opts: {
       rationale: profile.rationale ?? null,
     });
 
-    revalidatePath("/mama/reports");
-    revalidatePath("/mama/family");
+    revalidatePath("/reports");
+    revalidatePath("/family");
     return {
       ok: true,
       abnormalCount: parsed.abnormal_summary.length,

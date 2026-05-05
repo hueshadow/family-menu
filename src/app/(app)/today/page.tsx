@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RecipeBlock } from "@/components/recipe-block";
+import { ShareButton } from "@/components/share-button";
 import { SubstituteHelper } from "@/components/substitute-helper";
 import {
   getOrCreateWeek,
@@ -7,6 +8,7 @@ import {
   isoDate,
   mondayOf,
 } from "@/lib/db";
+import { formatDayMenu } from "@/lib/share-formatter";
 import { DISH_ICONS, DISH_SLOTS } from "@/lib/shared";
 
 export const dynamic = "force-dynamic";
@@ -27,7 +29,7 @@ export default async function AyiHome() {
     return (
       <div className="space-y-4">
         <div className="rounded-md border p-4">
-          <h3 className="text-xl font-semibold">{todayLabel}</h3>
+          <h3 className="font-display text-xl tracking-wide">{todayLabel}</h3>
           <p className="mt-2 text-sm text-muted-foreground">
             今天是周日 / 计划之外的日子，由家里自由安排。
           </p>
@@ -43,16 +45,27 @@ export default async function AyiHome() {
     .filter((n) => n.trim().length > 0);
   const recipes = await getRecipesByNames(dishNames);
   const recipeMap = new Map(recipes.map((r) => [r.name, r]));
+  const shareText = formatDayMenu(today);
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border p-4">
-        <h3 className="text-xl font-semibold">{todayLabel}</h3>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {filled === total
-            ? `今日 ${total} 道菜已就绪`
-            : `已安排 ${filled} / ${total} 道菜，请妈妈补全`}
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3 rounded-md border p-4">
+        <div>
+          <h3 className="font-display text-xl tracking-wide">{todayLabel}</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {filled === total
+              ? `今日 ${total} 道菜已就绪`
+              : `已安排 ${filled} / ${total} 道菜`}
+          </p>
+        </div>
+        {filled > 0 ? (
+          <ShareButton
+            text={shareText}
+            title="今日菜单"
+            label="分享至微信"
+            size="sm"
+          />
+        ) : null}
       </div>
 
       <div className="space-y-3">

@@ -26,7 +26,7 @@ export default async function TrendPage() {
       <div className="space-y-2">
         <h3 className="text-2xl font-semibold">营养趋势</h3>
         <p className="text-sm text-muted-foreground">
-          还没有任何已分析的周菜单。回 <code>/mama</code> 点 「营养分析」即可记录本周指标。
+          还没有任何已分析的周菜单。回 <code>/menu</code> 点 「营养分析」即可记录本周指标。
         </p>
       </div>
     );
