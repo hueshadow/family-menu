@@ -2,6 +2,7 @@ import { access } from "node:fs/promises";
 import { join } from "node:path";
 import Link from "next/link";
 import { ArrowRight, ClipboardList, Sunrise, Utensils } from "lucide-react";
+import { DownloadImageButton } from "@/components/download-image-button";
 // Smart day card: before 13:00 → today's menu (label "今日");
 // from 13:00 onward → tomorrow's menu (label "明日"). Rolls into next day at midnight.
 import { Badge } from "@/components/ui/badge";
@@ -115,14 +116,21 @@ export default async function Home() {
             </span>
           </CardTitle>
           {target ? (
-            <Link
-              href={`/shopping/${targetIso}`}
-              className="inline-flex items-center gap-1.5 rounded-md border border-border/60 bg-card px-3 py-1.5 text-xs text-muted-foreground transition hover:border-primary/50 hover:bg-primary/5 hover:text-primary"
-            >
-              <ClipboardList className="size-3.5" />
-              {targetTitle}采购
-              <ArrowRight className="size-3" />
-            </Link>
+            <div className="flex items-center gap-2">
+              <DownloadImageButton
+                url={`/api/photo/day-board/${targetIso}`}
+                filename={`${targetIso}-${targetTitle}菜单.png`}
+                label={`${targetTitle}图片`}
+              />
+              <Link
+                href={`/shopping/${targetIso}`}
+                className="inline-flex items-center gap-1.5 rounded-md border border-border/60 bg-card px-3 py-1.5 text-xs text-muted-foreground transition hover:border-primary/50 hover:bg-primary/5 hover:text-primary"
+              >
+                <ClipboardList className="size-3.5" />
+                {targetTitle}采购
+                <ArrowRight className="size-3" />
+              </Link>
+            </div>
           ) : null}
         </CardHeader>
         {!target ? (
@@ -227,6 +235,11 @@ export default async function Home() {
               本周菜单 · {week.days[0].date.slice(5)}–{week.days[5].date.slice(5)}
             </span>
           </CardTitle>
+          <DownloadImageButton
+            url={`/api/photo/menu-board/${week.week_start}`}
+            filename={`${week.week_start}-本周菜单.png`}
+            label="本周图片"
+          />
         </CardHeader>
         <CardContent className="space-y-4 pt-4">
           {week.days.map((day, dayIdx) => {
