@@ -108,12 +108,12 @@ export default async function Home() {
         ) : (
           <>
             {hasTodayTablePhoto ? (
-              <Link href="/today" className="block">
+              <Link href="/today" className="block px-6">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={`/api/photo/table/${todayIso}`}
                   alt={`今日餐桌：${today.dishes.map((d) => d.name).filter(Boolean).join("、")}`}
-                  className="aspect-square w-full object-cover transition hover:opacity-95"
+                  className="aspect-square w-full rounded-md object-cover transition hover:opacity-95"
                 />
               </Link>
             ) : (
