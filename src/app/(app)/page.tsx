@@ -2,6 +2,8 @@ import { access } from "node:fs/promises";
 import { join } from "node:path";
 import Link from "next/link";
 import { ArrowRight, ClipboardList, Sunrise, Utensils } from "lucide-react";
+// Smart day card: before 13:00 → today's menu (label "今日");
+// from 13:00 onward → tomorrow's menu (label "明日"). Rolls into next day at midnight.
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getOrCreateWeek, isoDate, mondayOf } from "@/lib/db";
@@ -17,51 +19,40 @@ export default async function Home() {
   const week = await getOrCreateWeek(monday);
   const seasonal = describeSeasonal();
 
-  const todayIso = isoDate(new Date());
-  const today = week.days.find((d) => d.date === todayIso) ?? null;
-  const todayLabel = new Date().toLocaleDateString("zh-CN", {
-    month: "long",
-    day: "numeric",
-    weekday: "long",
-  });
-  let hasTodayTablePhoto = false;
-  if (today) {
-    try {
-      await access(join(TABLE_PHOTOS_DIR, `${todayIso}.png`));
-      hasTodayTablePhoto = true;
-    } catch {
-      hasTodayTablePhoto = false;
-    }
+  // Smart day target: today before 13:00, otherwise tomorrow.
+  const now = new Date();
+  const showTomorrow = now.getHours() >= 13;
+  const targetDate = new Date(now);
+  targetDate.setHours(0, 0, 0, 0);
+  if (showTomorrow) {
+    targetDate.setDate(targetDate.getDate() + 1);
   }
-
-  // Tomorrow preview (so the cook can prep ingredients in advance)
-  const tomorrowDate = new Date();
-  tomorrowDate.setDate(tomorrowDate.getDate() + 1);
-  const tomorrowIso = isoDate(tomorrowDate);
-  const tomorrow = week.days.find((d) => d.date === tomorrowIso) ?? null;
-  const tomorrowDayIdx = tomorrow
-    ? week.days.findIndex((d) => d.date === tomorrowIso)
+  const targetIso = isoDate(targetDate);
+  const target = week.days.find((d) => d.date === targetIso) ?? null;
+  const targetDayIdx = target
+    ? week.days.findIndex((d) => d.date === targetIso)
     : -1;
-  const tomorrowLabel = tomorrowDate.toLocaleDateString("zh-CN", {
+  const targetWeekdayLabel = targetDate.toLocaleDateString("zh-CN", {
     month: "long",
     day: "numeric",
     weekday: "long",
   });
-  let hasTomorrowTablePhoto = false;
-  if (tomorrow) {
+  const targetTitle = showTomorrow ? "明日" : "今日";
+  let hasTargetTablePhoto = false;
+  if (target) {
     try {
-      await access(join(TABLE_PHOTOS_DIR, `${tomorrowIso}.png`));
-      hasTomorrowTablePhoto = true;
+      await access(join(TABLE_PHOTOS_DIR, `${targetIso}.png`));
+      hasTargetTablePhoto = true;
     } catch {
-      hasTomorrowTablePhoto = false;
+      hasTargetTablePhoto = false;
     }
   }
-  const tomorrowDishPhotos = tomorrow
+  const targetDishPhotos = target
     ? await Promise.all(
-        tomorrow.dishes.map(async (_dish, dishIdx) => {
+        target.dishes.map(async (_dish, dishIdx) => {
           try {
             await access(
-              join(DISH_PHOTOS_DIR, `d${tomorrowDayIdx + 1}-s${dishIdx}.png`),
+              join(DISH_PHOTOS_DIR, `d${targetDayIdx + 1}-s${dishIdx}.png`),
             );
             return true;
           } catch {
@@ -108,105 +99,44 @@ export default async function Home() {
         ) : null}
       </header>
 
-      {/* Today */}
-      <Card className="overflow-hidden border-border/70 bg-card">
-        <CardHeader className="border-b border-border/40">
-          <CardTitle className="flex items-baseline gap-2 text-lg">
-            <Utensils className="size-4 text-primary" />
-            <span className="font-display text-xl">今日 · {todayLabel}</span>
-          </CardTitle>
-        </CardHeader>
-        {!today ? (
-          <CardContent className="pt-4 text-sm">
-            <p className="text-muted-foreground">
-              今天是周日 / 计划之外的日子，由家里自由安排。
-            </p>
-          </CardContent>
-        ) : today.dishes.every((d) => !d.name.trim()) ? (
-          <CardContent className="pt-4 text-sm">
-            <p className="text-muted-foreground">
-              本周菜单还没生成。
-              <Link
-                href="/menu"
-                className="ml-2 text-primary underline-offset-2 hover:underline"
-              >
-                去 AI 一键生成 →
-              </Link>
-            </p>
-          </CardContent>
-        ) : (
-          <>
-            {hasTodayTablePhoto ? (
-              <Link href="/today" className="block px-6">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`/api/photo/table/${todayIso}`}
-                  alt={`今日餐桌：${today.dishes.map((d) => d.name).filter(Boolean).join("、")}`}
-                  className="aspect-[3/2] w-full rounded-md object-cover transition hover:opacity-95"
-                />
-              </Link>
-            ) : (
-              <CardContent className="pt-4 text-sm">
-                <ul className="space-y-1.5">
-                  {today.dishes.map((dish, i) =>
-                    dish.name.trim() ? (
-                        <li key={i} className="flex items-baseline gap-2">
-                          <span className="text-base">{DISH_ICONS[i]}</span>
-                          <span className="text-base">{dish.name}</span>
-                        </li>
-                    ) : null,
-                  )}
-                </ul>
-              </CardContent>
-            )}
-            <CardContent className="border-t border-border/40 py-3 text-muted-foreground">
-              <p className="mb-2 text-base leading-relaxed">
-                {today.dishes
-                  .map((d, i) =>
-                    d.name.trim() ? `${DISH_ICONS[i]} ${d.name}` : null,
-                  )
-                  .filter(Boolean)
-                  .join("　·　")}
-              </p>
-              <Link
-                href="/today"
-                className="inline-flex items-center gap-1 hover:text-primary"
-              >
-                查看食材与做法 <ArrowRight className="size-3" />
-              </Link>
-            </CardContent>
-          </>
-        )}
-      </Card>
-
-      {/* Tomorrow preview — so the cook can prep ingredients in advance */}
+      {/* Smart day card — today before 13:00, otherwise tomorrow.
+          Auto-rolls at midnight & 13:00 since this is a server component
+          rendered on each request. */}
       <Card className="overflow-hidden border-border/70 bg-card">
         <CardHeader className="flex flex-row items-center justify-between border-b border-border/40">
           <CardTitle className="flex items-baseline gap-2">
-            <Sunrise className="size-4 text-primary" />
-            <span className="font-display text-xl">明日 · {tomorrowLabel}</span>
+            {showTomorrow ? (
+              <Sunrise className="size-4 text-primary" />
+            ) : (
+              <Utensils className="size-4 text-primary" />
+            )}
+            <span className="font-display text-xl">
+              {targetTitle} · {targetWeekdayLabel}
+            </span>
           </CardTitle>
-          {tomorrow ? (
+          {target ? (
             <Link
-              href={`/shopping/${tomorrowIso}`}
+              href={`/shopping/${targetIso}`}
               className="inline-flex items-center gap-1.5 rounded-md border border-border/60 bg-card px-3 py-1.5 text-xs text-muted-foreground transition hover:border-primary/50 hover:bg-primary/5 hover:text-primary"
             >
               <ClipboardList className="size-3.5" />
-              明日采购
+              {targetTitle}采购
               <ArrowRight className="size-3" />
             </Link>
           ) : null}
         </CardHeader>
-        {!tomorrow ? (
+        {!target ? (
           <CardContent className="pt-4 text-sm">
             <p className="text-muted-foreground">
-              明天是周日 / 计划之外的日子，可休息或自由安排。
+              {showTomorrow
+                ? "明天是周日 / 计划之外的日子，可休息或自由安排。"
+                : "今天是周日 / 计划之外的日子，由家里自由安排。"}
             </p>
           </CardContent>
-        ) : tomorrow.dishes.every((d) => !d.name.trim()) ? (
+        ) : target.dishes.every((d) => !d.name.trim()) ? (
           <CardContent className="pt-4 text-sm">
             <p className="text-muted-foreground">
-              明日菜单还没生成。
+              {targetTitle}菜单还没生成。
               <Link
                 href="/menu"
                 className="ml-2 text-primary underline-offset-2 hover:underline"
@@ -217,25 +147,30 @@ export default async function Home() {
           </CardContent>
         ) : (
           <>
-            {hasTomorrowTablePhoto ? (
+            {hasTargetTablePhoto ? (
               <Link href="/menu" className="block px-6 pt-4">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={`/api/photo/table/${tomorrowIso}`}
-                  alt={`明日餐桌：${tomorrow.dishes.map((d) => d.name).filter(Boolean).join("、")}`}
+                  src={`/api/photo/table/${targetIso}`}
+                  alt={`${targetTitle}餐桌：${target.dishes.map((d) => d.name).filter(Boolean).join("、")}`}
                   className="aspect-[3/2] w-full rounded-md object-cover transition hover:opacity-95"
                 />
               </Link>
             ) : null}
             <CardContent className="space-y-3 pt-4">
               <p className="text-xs leading-relaxed text-muted-foreground">
-                明日 {tomorrow.dishes.filter((d) => d.name.trim()).length} 道菜 · 提前确认食材是否齐备
+                {targetTitle}{" "}
+                {target.dishes.filter((d) => d.name.trim()).length}{" "}
+                道菜 ·{" "}
+                {showTomorrow
+                  ? "提前确认食材是否齐备"
+                  : "今日待做菜品与食材"}
               </p>
               <div className="grid gap-3 sm:grid-cols-2">
-                {tomorrow.dishes.map((dish, i) => {
+                {target.dishes.map((dish, i) => {
                   const dishName = dish.name.trim();
                   if (!dishName) return null;
-                  const hasPhoto = tomorrowDishPhotos[i];
+                  const hasPhoto = targetDishPhotos[i];
                   return (
                     <div
                       key={i}
@@ -245,7 +180,7 @@ export default async function Home() {
                         {hasPhoto ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
-                            src={`/api/photo/dish/${tomorrowDayIdx + 1}/${i}`}
+                            src={`/api/photo/dish/${targetDayIdx + 1}/${i}`}
                             alt={dishName}
                             className="h-full w-full object-cover"
                           />
@@ -272,10 +207,11 @@ export default async function Home() {
             </CardContent>
             <CardContent className="flex items-center justify-end border-t border-border/40 py-3 text-xs text-muted-foreground">
               <Link
-                href="/menu"
+                href={showTomorrow ? "/menu" : "/today"}
                 className="inline-flex items-center gap-1 hover:text-primary"
               >
-                查看一周完整菜单 <ArrowRight className="size-3" />
+                {showTomorrow ? "查看一周完整菜单" : "查看食材与做法"}{" "}
+                <ArrowRight className="size-3" />
               </Link>
             </CardContent>
           </>
