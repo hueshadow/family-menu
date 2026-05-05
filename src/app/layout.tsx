@@ -9,7 +9,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "家庭菜单 · 苏州本帮",
+  title: "家庭菜单 · 江浙家常",
   description: "中式 5 口家庭周菜单 · 体检报告驱动的个性化食谱与采购清单",
 };
 

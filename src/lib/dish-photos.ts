@@ -7,6 +7,8 @@ import type { DayInput } from "@/lib/shared";
 const PARALLEL = 5;
 const DEST = join(homedir(), "Documents/family-menu-data/dish-images");
 
+export const DISH_PHOTOS_DIR = DEST;
+
 interface Dish {
   dayIdx: number;
   slotIdx: number;

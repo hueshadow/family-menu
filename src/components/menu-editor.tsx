@@ -87,7 +87,7 @@ export function MenuEditor({
   const onSave = () => {
     setError(null);
     startSave(async () => {
-      await saveWeekAction(weekId, days);
+      await saveWeekAction(weekId, weekStart, days);
       setSaved(new Date().toLocaleTimeString("zh-CN"));
     });
   };
@@ -191,10 +191,15 @@ export function MenuEditor({
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {days.map((day, di) => (
           <Card key={day.date} className="border-border/70 bg-card">
-            <CardHeader className="flex-row items-baseline justify-between border-b border-border/40 pb-3">
-              <CardTitle className="font-display text-xl tracking-wide">
-                {WEEKDAYS[di]}
-              </CardTitle>
+              <CardHeader className="flex-row items-baseline justify-between border-b border-border/40 pb-3">
+              <div className="space-y-1">
+                <CardTitle className="font-display text-xl tracking-wide">
+                  {WEEKDAYS[di]}
+                </CardTitle>
+                {day.style ? (
+                  <p className="text-xs text-muted-foreground">风格：{day.style}</p>
+                ) : null}
+              </div>
               <span className="font-mono text-xs text-muted-foreground">
                 {day.date.slice(5)}
               </span>
@@ -217,6 +222,7 @@ export function MenuEditor({
                     ) : null}
                   </div>
                   <Input
+                    className="md:text-base"
                     placeholder="菜名"
                     value={dish.name}
                     onChange={(e) => update(di, dishi, "name", e.target.value)}
@@ -311,7 +317,7 @@ export function MenuEditor({
               换一道{replacing ? DISH_SLOTS[replacing.dishIdx] : ""}
             </DialogTitle>
             <DialogDescription>
-              AI 根据家庭画像、苏州本帮风格、当日其它菜及本周历史给出 3 个候选
+              AI 根据家庭画像、当日其它菜及本周历史，给出 3 个偏江浙家常且可融合其他菜系的候选
             </DialogDescription>
           </DialogHeader>
           {pendingCandidates && !candidates ? (

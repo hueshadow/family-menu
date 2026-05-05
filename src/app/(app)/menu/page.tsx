@@ -27,6 +27,9 @@ export default async function MenuPage() {
           <p className="text-sm text-muted-foreground">
             {week.days[0].date} – {week.days[5].date} · 周一至周六 · 每天 5 道菜
           </p>
+          <p className="text-xs text-muted-foreground/80">
+            默认以江浙家常为主，每周可适度融合 1-2 天川菜、徽菜或地中海风味
+          </p>
           {seasonal ? (
             <p className="mt-2 max-w-xl text-xs leading-relaxed text-muted-foreground/90">
               🌱 {seasonal}

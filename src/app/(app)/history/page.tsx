@@ -52,9 +52,9 @@ export default async function HistoryPage() {
                   {dishCount} 道菜预览
                 </span>
               </CardHeader>
-              <CardContent className="text-sm text-muted-foreground">
+              <CardContent className="text-muted-foreground">
                 {w.dishes.length ? (
-                  <p className="leading-relaxed">{w.dishes.join(" · ")}</p>
+                  <p className="text-base leading-relaxed">{w.dishes.join(" · ")}</p>
                 ) : (
                   <p className="italic">本周菜单为空</p>
                 )}

@@ -12,6 +12,8 @@ const IMG_DIR = join(HOME, "Documents/family-menu-data/dish-images");
 const OUT_DIR = join(HOME, "Documents/family-menu-data/menu-boards");
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
+export const MENU_BOARDS_DIR = OUT_DIR;
+
 const SLOTS = ["主荤", "副荤", "蔬菜", "凉菜", "汤"] as const;
 const WEEKDAYS = ["周一", "周二", "周三", "周四", "周五", "周六"] as const;
 

@@ -65,7 +65,7 @@ async function genOne(day) {
         model: MODEL,
         prompt: buildPrompt(day),
         n: 1,
-        size: "1024x1024",
+        size: "1536x1024",
       }),
     });
     const elapsed = ((Date.now() - t0) / 1000).toFixed(1);

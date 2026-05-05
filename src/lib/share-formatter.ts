@@ -39,7 +39,8 @@ export function formatWeekMenu(days: DayInput[]): string {
       .filter(Boolean)
       .join("\n");
     if (!lines) return null;
-    return `【${wd} ${md}】\n${lines}`;
+    const styleLine = day.style?.trim() ? `\n风格：${day.style.trim()}` : "";
+    return `【${wd} ${md}】${styleLine}\n${lines}`;
   });
 
   const body = sections.filter(Boolean).join("\n\n");
@@ -61,7 +62,8 @@ export function formatDayMenu(day: DayInput): string {
   if (sections.length === 0) {
     return `🍱 ${md} · ${wd}\n\n（今日菜单还没生成）\n\n${FOOTER}`;
   }
-  return `🍱 ${md} · ${wd}\n\n${sections.join("\n\n")}\n\n${FOOTER}`;
+  const styleLine = day.style?.trim() ? `\n风格：${day.style.trim()}` : "";
+  return `🍱 ${md} · ${wd}${styleLine}\n\n${sections.join("\n\n")}\n\n${FOOTER}`;
 }
 
 const CATEGORY_ORDER = [
@@ -87,7 +89,12 @@ export function formatShoppingList(
   items: ShoppingItem[],
   opts: { onlyUnchecked?: boolean } = { onlyUnchecked: true },
 ): string {
-  const filtered = opts.onlyUnchecked ? items.filter((i) => !i.checked) : items;
+  // Pantry seasonings are NOT shared — 奶奶 doesn't need to be told to buy soy sauce.
+  // She can confirm pantry stock in the app instead.
+  const buyItems = items.filter((i) => (i.kind ?? "buy") === "buy");
+  const filtered = opts.onlyUnchecked
+    ? buyItems.filter((i) => !i.checked)
+    : buyItems;
   if (filtered.length === 0) {
     return opts.onlyUnchecked
       ? `🛒 本周采购清单\n\n本周已全部购齐 ✅\n\n${FOOTER}`
@@ -101,9 +108,9 @@ export function formatShoppingList(
     grouped.set(i.category, arr);
   }
 
-  const cats = CATEGORY_ORDER.filter((c) => grouped.has(c));
+  const cats = CATEGORY_ORDER.filter((c) => grouped.has(c) && c !== "seasoning");
   for (const c of grouped.keys()) {
-    if (!cats.includes(c)) cats.push(c);
+    if (!cats.includes(c) && c !== "seasoning") cats.push(c);
   }
 
   const sections = cats.map((cat) => {
@@ -115,7 +122,7 @@ export function formatShoppingList(
     return `${header}\n${lines}`;
   });
 
-  const total = items.length;
+  const total = buyItems.length;
   const remaining = filtered.length;
   const headLine =
     opts.onlyUnchecked && remaining < total

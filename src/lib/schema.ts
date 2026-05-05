@@ -82,6 +82,7 @@ export const DISHES_PER_DAY = DISH_SLOTS.length;
 
 export const DaySchema = z.object({
   date: z.string(),
+  style: z.string().optional(),
   dishes: z.array(DishRefSchema).length(DISHES_PER_DAY),
 });
 

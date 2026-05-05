@@ -27,6 +27,7 @@ const WeekOutputSchema = z.object({
   days: z.array(
     z.object({
       date: z.string(),
+      style: z.string().optional(),
       dishes: z.array(DishOutputSchema).length(DISH_SLOTS.length),
     }),
   ),
@@ -69,6 +70,7 @@ export async function generateWeekMenu(opts: {
   }
   return parsed.days.map((d, i) => ({
     date: opts.weekDates[i],
+    style: d.style?.trim() || undefined,
     dishes: DISH_SLOTS.map((slot) => {
       const found = d.dishes.find((x) => x.slot === slot);
       return {

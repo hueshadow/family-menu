@@ -137,6 +137,8 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-size: 16px;
+    line-height: 1.5;
     font-feature-settings: "tnum", "ss01";
   }
   html {

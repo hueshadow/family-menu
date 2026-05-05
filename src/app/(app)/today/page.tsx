@@ -61,6 +61,11 @@ export default async function AyiHome() {
               ? `今日 ${total} 道菜已就绪`
               : `已安排 ${filled} / ${total} 道菜`}
           </p>
+          {today.style ? (
+            <p className="mt-1 text-xs text-muted-foreground/80">
+              今日风格：{today.style}
+            </p>
+          ) : null}
         </div>
         {filled > 0 ? (
           <ShareButton
@@ -80,7 +85,7 @@ export default async function AyiHome() {
               <CardHeader>
                 <CardTitle className="flex items-baseline gap-2 text-base">
                   <span>{DISH_ICONS[i]}</span>
-                  <span>
+                  <span className="text-base">
                     {dish.name || `（${DISH_SLOTS[i]}：未填写）`}
                   </span>
                 </CardTitle>

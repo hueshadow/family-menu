@@ -11,8 +11,9 @@ import {
   isoDate,
   mondayOf,
 } from "@/lib/db";
+import { DISH_PHOTOS_DIR } from "@/lib/dish-photos";
 import { describeSeasonal } from "@/lib/seasonal";
-import { formatDayMenu, formatShoppingList, formatWeekMenu } from "@/lib/share-formatter";
+import { formatDayMenu, formatShoppingList } from "@/lib/share-formatter";
 import { DISH_ICONS, WEEKDAYS } from "@/lib/shared";
 import { TABLE_PHOTOS_DIR } from "@/lib/table-photo";
 
@@ -31,10 +32,6 @@ export default async function Home() {
     day: "numeric",
     weekday: "long",
   });
-  const todayWeekdayIdx = today
-    ? week.days.findIndex((d) => d.date === todayIso)
-    : -1;
-
   let hasTodayTablePhoto = false;
   if (today) {
     try {
@@ -44,6 +41,21 @@ export default async function Home() {
       hasTodayTablePhoto = false;
     }
   }
+
+  const weekDishPhotos = await Promise.all(
+    week.days.map(async (day, dayIdx) =>
+      Promise.all(
+        day.dishes.map(async (_dish, dishIdx) => {
+          try {
+            await access(join(DISH_PHOTOS_DIR, `d${dayIdx + 1}-s${dishIdx}.png`));
+            return true;
+          } catch {
+            return false;
+          }
+        }),
+      ),
+    ),
+  );
 
   const filledDays = week.days.filter((d) => d.dishes.some((x) => x.name.trim())).length;
   const totalItems = list?.items.length ?? 0;
@@ -58,7 +70,7 @@ export default async function Home() {
       <header className="space-y-3 text-center">
         <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/60 px-4 py-1 text-xs tracking-widest text-muted-foreground">
           <span aria-hidden>🍱</span>
-          <span>苏州本帮 · 江浙家常</span>
+          <span>江浙家常 · 多元菜系</span>
         </div>
         <h1 className="font-display text-4xl tracking-wide text-foreground">
           家 庭 菜 单
@@ -113,7 +125,7 @@ export default async function Home() {
                 <img
                   src={`/api/photo/table/${todayIso}`}
                   alt={`今日餐桌：${today.dishes.map((d) => d.name).filter(Boolean).join("、")}`}
-                  className="aspect-square w-full rounded-md object-cover transition hover:opacity-95"
+                  className="aspect-[3/2] w-full rounded-md object-cover transition hover:opacity-95"
                 />
               </Link>
             ) : (
@@ -121,17 +133,17 @@ export default async function Home() {
                 <ul className="space-y-1.5">
                   {today.dishes.map((dish, i) =>
                     dish.name.trim() ? (
-                      <li key={i} className="flex items-baseline gap-2">
-                        <span className="text-base">{DISH_ICONS[i]}</span>
-                        <span>{dish.name}</span>
-                      </li>
+                        <li key={i} className="flex items-baseline gap-2">
+                          <span className="text-base">{DISH_ICONS[i]}</span>
+                          <span className="text-base">{dish.name}</span>
+                        </li>
                     ) : null,
                   )}
                 </ul>
               </CardContent>
             )}
-            <CardContent className="border-t border-border/40 py-3 text-xs text-muted-foreground">
-              <p className="mb-2 leading-relaxed">
+            <CardContent className="border-t border-border/40 py-3 text-muted-foreground">
+              <p className="mb-2 text-base leading-relaxed">
                 {today.dishes
                   .map((d, i) =>
                     d.name.trim() ? `${DISH_ICONS[i]} ${d.name}` : null,
@@ -167,41 +179,69 @@ export default async function Home() {
             ) : null}
           </div>
         </CardHeader>
-        <CardContent className="pt-4 text-sm">
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-6">
-            {week.days.map((d, i) => {
-              const isToday = d.date === todayIso;
-              return (
-                <div
-                  key={d.date}
-                  className={`rounded-md border p-2 ${isToday ? "border-primary/60 bg-primary/5" : "border-border/50"}`}
-                >
-                  <div className="text-xs font-medium">{WEEKDAYS[i]}</div>
-                  <div className="text-[10px] text-muted-foreground">
-                    {d.date.slice(5)}
+        <CardContent className="space-y-4 pt-4">
+          {week.days.map((day, dayIdx) => {
+            const dishes = day.dishes.filter((dish) => dish.name.trim());
+
+            return (
+              <section key={day.date} className="space-y-2">
+                <div className="flex items-baseline justify-between gap-3 px-0.5">
+                  <div className="flex items-baseline gap-2">
+                    <h3 className="text-sm font-medium">{WEEKDAYS[dayIdx]}</h3>
+                    <span className="text-xs text-muted-foreground">{day.date.slice(5)}</span>
+                    {day.style ? (
+                      <Badge variant="outline" className="h-5 px-1.5 text-[10px] font-normal">
+                        {day.style}
+                      </Badge>
+                    ) : null}
                   </div>
-                  <div className="mt-1 text-[10px] text-muted-foreground">
-                    {d.dishes.filter((x) => x.name.trim()).length} 道菜
-                  </div>
+                  <span className="text-xs text-muted-foreground">{dishes.length} 道菜</span>
                 </div>
-              );
-            })}
-          </div>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <ShareButton
-              text={formatWeekMenu(week.days)}
-              title="本周菜单"
-              label="分享本周"
-              size="sm"
-              variant="outline"
-            />
-            <Link
-              href="/menu"
-              className="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-sm text-muted-foreground transition hover:bg-secondary hover:text-foreground"
-            >
-              编辑菜单 <ArrowRight className="size-3" />
-            </Link>
-          </div>
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                  {day.dishes.map((dish, dishIdx) => {
+                    const hasDishPhoto = weekDishPhotos[dayIdx][dishIdx];
+                    const dishName = dish.name.trim();
+
+                    return (
+                      <div
+                        key={`${day.date}-${dishIdx}`}
+                        className="overflow-hidden rounded-lg border border-border/60 bg-muted/20"
+                      >
+                        {dishName ? (
+                          hasDishPhoto ? (
+                            <div className="px-3 pt-3">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={`/api/photo/dish/${dayIdx + 1}/${dishIdx}`}
+                                alt={dishName}
+                                className="aspect-[4/3] w-full rounded-md object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <div className="flex aspect-[4/3] items-center justify-center bg-muted text-3xl text-muted-foreground/70">
+                              {DISH_ICONS[dishIdx]}
+                            </div>
+                          )
+                        ) : (
+                          <div className="flex aspect-[4/3] items-center justify-center bg-muted text-xs text-muted-foreground">
+                            待补充
+                          </div>
+                        )}
+                        <div className="space-y-1 px-3 py-3">
+                          <div className="text-[11px] tracking-wide text-muted-foreground">
+                            {DISH_ICONS[dishIdx]} {day.dishes[dishIdx] ? ["主荤", "副荤", "蔬菜", "凉菜", "汤"][dishIdx] : "菜品"}
+                          </div>
+                          <div className="line-clamp-2 text-base leading-snug text-foreground">
+                            {dishName || "待补充"}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          })}
         </CardContent>
       </Card>
 

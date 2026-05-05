@@ -25,7 +25,7 @@ Composition: dishes arranged in a balanced minimalist layout on a light wood (or
 
 Lighting: soft, diffused natural daylight from a side window, gentle shadows, no harsh highlights.
 
-Style: editorial food photography, MUJI / Kinfolk aesthetic, photoreal, NOT illustration. Square 1:1 framing. Color palette is calm and muted — primarily warm whites, light woods, with the natural colors of the food itself.
+Style: editorial food photography, MUJI / Kinfolk aesthetic, photoreal, NOT illustration. Landscape 3:2 framing — the table extends horizontally across the full width. Color palette is calm and muted — primarily warm whites, light woods, with the natural colors of the food itself.
 
 NO text labels, NO watermark, NO people, NO additional decorative props beyond the chopsticks and teacup.`;
 }
@@ -54,7 +54,7 @@ async function genOne(
         model,
         prompt,
         n: 1,
-        size: "1024x1024",
+        size: "1536x1024",
       }),
     });
     if (!res.ok) {

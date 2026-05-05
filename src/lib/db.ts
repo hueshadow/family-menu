@@ -112,7 +112,11 @@ function normalizeDays(days: DayInput[]): DayInput[] {
   return days.map((d) => {
     const dishes = [...(d.dishes ?? [])];
     while (dishes.length < DISHES_PER_DAY) dishes.push(emptyDish());
-    return { ...d, dishes: dishes.slice(0, DISHES_PER_DAY) };
+    return {
+      ...d,
+      style: d.style?.trim() || undefined,
+      dishes: dishes.slice(0, DISHES_PER_DAY),
+    };
   });
 }
 
@@ -129,6 +133,7 @@ export async function getOrCreateWeek(weekStart: Date): Promise<WeekRow> {
 
   const emptyDays: DayInput[] = weekDates(weekStart).map((d) => ({
     date: isoDate(d),
+    style: undefined,
     dishes: Array.from({ length: DISHES_PER_DAY }, () => emptyDish()),
   }));
   const [created] = await query<WeekRow>(
@@ -366,15 +371,68 @@ export async function setShoppingItemChecked(
   );
 }
 
-// ---------- ingredient aggregation (simple text-based for M2) ----------
+// ---------- ingredient aggregation ----------
+
+// Skip these entirely — household necessities, not purchasable line items
+const HOUSEHOLD_BASICS = new Set([
+  "水",
+  "温水",
+  "热水",
+  "凉水",
+  "开水",
+  "清水",
+  "纯净水",
+  "矿泉水",
+  "白水",
+]);
+
+// Normalize alternate names → canonical
+const NAME_NORMALIZE: Record<string, string> = {
+  蛋清: "鸡蛋",
+  蛋黄: "鸡蛋",
+  鸡蛋清: "鸡蛋",
+  鸡蛋黄: "鸡蛋",
+  鸡蛋液: "鸡蛋",
+};
+
+// Pantry seasoning patterns (tested against full name) → kind="pantry"
+const SEASONING_RULES: RegExp[] = [
+  /油$/,                                                         // 菜籽油 / 橄榄油 / 香油 / 麻油 / 茶油
+  /^盐$/, /^食盐$/, /精盐/, /低钠盐/,
+  /酱$/, /酱油$/, /生抽$/, /老抽$/, /蚝油$/, /鱼露$/, /蒸鱼豉油$/,
+  /醋$/, /^米醋$/, /^陈醋$/, /^香醋$/,
+  /^糖$/, /冰糖$/, /^白糖$/, /^红糖$/,
+  /料酒$/, /黄酒$/, /^米酒$/,
+  /胡椒/, /^黑胡椒$/, /^白胡椒$/,
+  /^花椒/, /^八角$/, /^桂皮$/, /^香叶$/,
+  /^孜然$/, /^小茴香$/, /^草果$/, /^陈皮$/, /^豆蔻$/, /^丁香$/,
+  /干辣椒$/, /辣椒粉$/, /辣椒油$/, /^辣椒$/,
+  /豆豉$/, /豆瓣酱$/, /老干妈/,
+  /^迷迭香$/, /^百里香$/, /^罗勒$/, /^月桂叶$/,
+  /^糟卤$/, /低盐糟卖$/, /低盐糟卤$/,
+  /淀粉$/, /生粉$/, /玉米淀粉$/,
+  /^味精$/, /^鸡精$/,
+];
+
+// Fresh aromatics: collapse all variants into one canonical, fixed amount
+// (because 姜片2片+4片+3片+... is silly — you buy a chunk of ginger)
+interface AromaticRule {
+  match: RegExp;
+  canonical: string;
+  qty: string;
+}
+const FRESH_AROMATIC_RULES: AromaticRule[] = [
+  { match: /^姜/, canonical: "姜", qty: "1 块（约 100 克）" },
+  { match: /^葱/, canonical: "葱", qty: "1 把（约 100 克）" },
+  { match: /^蒜/, canonical: "蒜", qty: "1 头（约 50 克）" },
+];
 
 const CATEGORY_KEYWORDS: Array<[string[], string]> = [
-  [["鱼", "虾", "肉", "鸡", "鸭", "牛", "猪", "排骨", "蛋", "豆腐", "豆干", "豆", "海带"], "protein"],
-  [["菜", "葱", "姜", "蒜", "番茄", "西红柿", "茄", "瓜", "萝卜", "笋", "菇", "木耳", "藕", "山药", "豆芽", "玉米", "韭"], "vegetable"],
+  [["鱼", "虾", "肉", "鸡", "鸭", "牛", "猪", "排骨", "蛋", "豆腐", "豆干", "豆", "海带", "豆瓣", "鳝"], "protein"],
+  [["菜", "葱", "姜", "蒜", "番茄", "西红柿", "茄", "瓜", "萝卜", "笋", "菇", "木耳", "藕", "山药", "豆芽", "玉米", "韭", "椒", "葱花"], "vegetable"],
   [["果", "莓", "橙", "蕉", "桃", "瓜"], "fruit"],
   [["奶", "酸奶", "奶酪", "起司"], "dairy"],
   [["米", "面", "粉", "麦", "燕麦", "馒头", "面包"], "grain"],
-  [["油", "盐", "酱", "醋", "糖", "料", "椒"], "seasoning"],
 ];
 
 function categorize(name: string): string {
@@ -384,46 +442,160 @@ function categorize(name: string): string {
   return "other";
 }
 
+function isSeasoning(name: string): boolean {
+  return SEASONING_RULES.some((re) => re.test(name));
+}
+
+function findAromatic(name: string): AromaticRule | null {
+  for (const r of FRESH_AROMATIC_RULES) {
+    if (r.match.test(name)) return r;
+  }
+  return null;
+}
+
+function mergeQty(qtys: string[]): string {
+  if (qtys.length === 0) return "";
+  // Drop pure 适量/少许; if everything was that, return 适量
+  const meaningful = qtys.filter(
+    (q) => !/^(适量|少许|若干)$/.test(q.trim()),
+  );
+  if (meaningful.length === 0) return "适量";
+
+  // Try to sum mass quantities
+  const masses: number[] = [];
+  const volumes: number[] = []; // ml
+  const counts = new Map<string, number>(); // unit → sum
+  const fallback: string[] = [];
+
+  for (const raw of meaningful) {
+    const q = raw.trim();
+    const mMass = q.match(/^(\d+(?:\.\d+)?)\s*(克|g|kg|千克|斤|两|公斤)$/);
+    if (mMass) {
+      let g = Number(mMass[1]);
+      const u = mMass[2];
+      if (u === "kg" || u === "千克" || u === "公斤") g *= 1000;
+      else if (u === "斤") g *= 500;
+      else if (u === "两") g *= 50;
+      masses.push(g);
+      continue;
+    }
+    const mVol = q.match(/^(\d+(?:\.\d+)?)\s*(毫升|ml|升|l|L)$/);
+    if (mVol) {
+      let v = Number(mVol[1]);
+      const u = mVol[2];
+      if (u === "升" || u === "l" || u === "L") v *= 1000;
+      volumes.push(v);
+      continue;
+    }
+    const mCount = q.match(/^(\d+(?:\.\d+)?)\s*(.+)$/);
+    if (mCount) {
+      const n = Number(mCount[1]);
+      const u = mCount[2].trim();
+      counts.set(u, (counts.get(u) ?? 0) + n);
+      continue;
+    }
+    fallback.push(q);
+  }
+
+  const parts: string[] = [];
+  if (masses.length) {
+    parts.push(`${masses.reduce((a, b) => a + b, 0)} 克`);
+  }
+  if (volumes.length) {
+    parts.push(`${volumes.reduce((a, b) => a + b, 0)} 毫升`);
+  }
+  // Counts: collapse if too many small units (姜片 N×slices) → use 适量 instead
+  for (const [unit, total] of counts) {
+    // Slice / piece / leaf sums above 5 are silly — treat as 适量
+    if (/^(片|粒|颗|瓣|段)$/.test(unit) && total > 5) {
+      parts.push("适量");
+    } else {
+      parts.push(`${total} ${unit}`);
+    }
+  }
+  if (fallback.length) {
+    parts.push(...Array.from(new Set(fallback)));
+  }
+  return parts.join(" + ");
+}
+
 function aggregateIngredients(days: DayInput[]): ShoppingItem[] {
-  const map = new Map<string, { qty: string[]; category: string }>();
+  interface Entry {
+    qty: string[];
+    category: string;
+    kind: "buy" | "pantry";
+    fixedQty?: string;
+  }
+  const map = new Map<string, Entry>();
+
   for (const d of days) {
     for (const dish of d.dishes) {
       if (!dish.ingredients?.trim()) continue;
-      // ingredients format: "鲈鱼 1 条, 葱姜适量, 蒸鱼豉油"
       const parts = dish.ingredients
         .split(/[,，;；\n]/)
         .map((s) => s.trim())
         .filter(Boolean);
+
       for (const p of parts) {
         const m = p.match(/^([^\d\s]+)\s*(.*)$/);
-        const name = (m?.[1] ?? p).trim();
+        let name = (m?.[1] ?? p).trim();
         const qty = (m?.[2] ?? "").trim();
-        const entry = map.get(name) ?? { qty: [], category: categorize(name) };
+
+        if (HOUSEHOLD_BASICS.has(name)) continue;
+        name = NAME_NORMALIZE[name] ?? name;
+
+        // Fresh aromatic: fixed amount, ignore individual qty
+        const aromatic = findAromatic(name);
+        if (aromatic) {
+          if (!map.has(aromatic.canonical)) {
+            map.set(aromatic.canonical, {
+              qty: [],
+              category: "vegetable",
+              kind: "buy",
+              fixedQty: aromatic.qty,
+            });
+          }
+          continue;
+        }
+
+        // Seasoning: pantry confirm
+        if (isSeasoning(name)) {
+          if (!map.has(name)) {
+            map.set(name, { qty: [], category: "seasoning", kind: "pantry" });
+          }
+          continue;
+        }
+
+        // Default: buyable
+        const entry = map.get(name) ?? {
+          qty: [],
+          category: categorize(name),
+          kind: "buy" as const,
+        };
         if (qty) entry.qty.push(qty);
         map.set(name, entry);
       }
     }
   }
+
   const items: ShoppingItem[] = Array.from(map.entries()).map(([name, v]) => ({
     name,
-    qty: v.qty.join(" + "),
+    qty: v.fixedQty ?? mergeQty(v.qty),
     category: v.category,
+    kind: v.kind,
     checked: false,
   }));
-  const order = [
-    "protein",
-    "vegetable",
-    "dairy",
-    "fruit",
-    "grain",
-    "seasoning",
-    "other",
-  ];
-  items.sort(
-    (a, b) =>
+
+  const order = ["protein", "vegetable", "dairy", "fruit", "grain", "seasoning", "other"];
+  items.sort((a, b) => {
+    // pantry items always at end
+    if ((a.kind ?? "buy") !== (b.kind ?? "buy")) {
+      return (a.kind ?? "buy") === "buy" ? -1 : 1;
+    }
+    return (
       order.indexOf(a.category) - order.indexOf(b.category) ||
-      a.name.localeCompare(b.name, "zh"),
-  );
+      a.name.localeCompare(b.name, "zh")
+    );
+  });
   return items;
 }
-

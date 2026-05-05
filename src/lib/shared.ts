@@ -29,6 +29,7 @@ export interface DishInput {
 
 export interface DayInput {
   date: string;
+  style?: string;
   dishes: DishInput[];
 }
 
@@ -46,6 +47,11 @@ export interface ShoppingItem {
   qty: string;
   category: string;
   checked: boolean;
+  /**
+   * 'buy'    : 必须采购（鱼菜肉果等）
+   * 'pantry' : 调味品 / 家中常备 — 只需确认是否够用，不算购物
+   */
+  kind?: "buy" | "pantry";
 }
 
 export interface ShoppingListRow {
@@ -60,6 +66,6 @@ export const CATEGORY_LABELS: Record<string, string> = {
   dairy: "🥛 奶制品",
   fruit: "🍎 水果",
   grain: "🌾 主食",
-  seasoning: "🧂 调味",
+  seasoning: "🧂 调味品 · 确认家中库存",
   other: "📦 其他",
 };

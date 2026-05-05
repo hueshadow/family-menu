@@ -1,0 +1,322 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - link "家庭菜单" [ref=e5] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e6]: 🍱
+          - generic [ref=e7]: 家庭菜单
+        - generic [ref=e8]: 苏州本帮 · 江浙家常
+      - navigation [ref=e9]:
+        - link "主页" [ref=e10] [cursor=pointer]:
+          - /url: /
+        - link "采购清单" [ref=e11] [cursor=pointer]:
+          - /url: /shopping
+        - link "家庭档案" [ref=e12] [cursor=pointer]:
+          - /url: /family
+        - link "营养趋势" [ref=e13] [cursor=pointer]:
+          - /url: /trend
+        - link "历史" [ref=e14] [cursor=pointer]:
+          - /url: /history
+    - main [ref=e15]:
+      - generic [ref=e16]:
+        - link "返回首页" [ref=e17] [cursor=pointer]:
+          - /url: /
+          - img [ref=e18]
+          - text: 返回首页
+        - generic [ref=e20]:
+          - generic [ref=e21]:
+            - heading "本周菜单" [level=3] [ref=e22]
+            - paragraph [ref=e23]: 2026-05-04 – 2026-05-09 · 周一至周六 · 每天 5 道菜
+            - paragraph [ref=e24]: 🌱 5 月苏州时令优选：蚕豆、豌豆、莼菜、鸡头米（嫩苞）、黄瓜（本地）、番茄（本地）、枇杷、杨梅（月底）、河虾、白鱼、黄鳝
+          - generic [ref=e25]:
+            - generic [ref=e26]: 🤖 AI 自动生成
+            - generic [ref=e27]: 🕘 周日 09:00 自动生成
+        - generic [ref=e28]:
+          - generic [ref=e29]:
+            - paragraph [ref=e30]: 未保存的修改会自动暂存在表单内
+            - generic [ref=e31]:
+              - button "分享本周" [ref=e32]:
+                - img
+                - text: 分享本周
+              - button "营养分析" [ref=e33]:
+                - img
+                - text: 营养分析
+              - button "AI 一键生成本周" [ref=e34]:
+                - img
+                - text: AI 一键生成本周
+              - button "保存并生成采购清单" [ref=e35]
+          - generic [ref=e36]:
+            - generic [ref=e37]:
+              - generic [ref=e38]:
+                - generic [ref=e39]: 周一
+                - generic [ref=e40]: 05-04
+              - generic [ref=e41]:
+                - generic [ref=e42]:
+                  - generic [ref=e43]:
+                    - generic [ref=e44]: 主荤
+                    - button "换一道" [ref=e45]:
+                      - img [ref=e46]
+                      - text: 换一道
+                  - textbox "菜名" [ref=e49]: 清蒸太湖白鱼
+                  - textbox "食材，逗号分隔。如：鲈鱼 1 条, 葱姜适量, 蒸鱼豉油" [ref=e50]: 太湖白鱼 1 条, 葱姜适量, 低钠蒸鱼豉油 1 汤匙, 菜籽油 1 茶匙
+                - generic [ref=e51]:
+                  - generic [ref=e52]:
+                    - generic [ref=e53]: 副荤
+                    - button "换一道" [ref=e54]:
+                      - img [ref=e55]
+                      - text: 换一道
+                  - textbox "菜名" [ref=e58]: 香叶陈皮卤鸡腿肉
+                  - textbox "食材，逗号分隔。如：鲈鱼 1 条, 葱姜适量, 蒸鱼豉油" [ref=e59]: 去皮鸡腿 3 只, 香叶 1 片, 陈皮 1 小片, 八角 半颗, 葱姜适量, 低钠生抽 1 汤匙
+                - generic [ref=e60]:
+                  - generic [ref=e61]:
+                    - generic [ref=e62]: 蔬菜
+                    - button "换一道" [ref=e63]:
+                      - img [ref=e64]
+                      - text: 换一道
+                  - textbox "菜名" [ref=e67]: 香菇芹菜炒百合
+                  - textbox "食材，逗号分隔。如：鲈鱼 1 条, 葱姜适量, 蒸鱼豉油" [ref=e68]: 芹菜 300 克, 鲜香菇 6 朵, 鲜百合 100 克, 蒜末少许, 菜籽油 2 茶匙
+                - generic [ref=e69]:
+                  - generic [ref=e70]:
+                    - generic [ref=e71]: 凉菜
+                    - button "换一道" [ref=e72]:
+                      - img [ref=e73]
+                      - text: 换一道
+                  - textbox "菜名" [ref=e76]: 糟卤河虾黄瓜片
+                  - textbox "食材，逗号分隔。如：鲈鱼 1 条, 葱姜适量, 蒸鱼豉油" [ref=e77]: 河虾 300 克, 本地黄瓜 1 根, 低盐糟卤 80 毫升, 姜片 2 片
+                - generic [ref=e78]:
+                  - generic [ref=e79]:
+                    - generic [ref=e80]: 汤
+                    - button "换一道" [ref=e81]:
+                      - img [ref=e82]
+                      - text: 换一道
+                  - textbox "菜名" [ref=e85]: 莼菜银鱼豆腐汤
+                  - textbox "食材，逗号分隔。如：鲈鱼 1 条, 葱姜适量, 蒸鱼豉油" [ref=e86]: 莼菜 150 克, 银鱼 100 克, 嫩豆腐 1 盒, 鸡蛋 1 个, 姜丝少许
+            - generic [ref=e87]:
+              - generic [ref=e88]:
+                - generic [ref=e89]: 周二
+                - generic [ref=e90]: 05-05
+              - generic [ref=e91]:
+                - generic [ref=e92]:
+                  - generic [ref=e93]:
+                    - generic [ref=e94]: 主荤
+                    - button "换一道" [ref=e95]:
+                      - img [ref=e96]
+                      - text: 换一道
+                  - textbox "菜名" [ref=e99]: 少油红烧黄鳝段
+                  - textbox "食材，逗号分隔。如：鲈鱼 1 条, 葱姜适量, 蒸鱼豉油" [ref=e100]: 黄鳝 500 克, 洋葱 半个, 姜蒜适量, 八角 半颗, 桂皮 1 小段, 低钠生抽 1 汤匙, 老抽 半茶匙
+                - generic [ref=e101]:
+                  - generic [ref=e102]:
+                    - generic [ref=e103]: 副荤
+                    - button "换一道" [ref=e104]:
+                      - img [ref=e105]
+                      - text: 换一道
+                  - textbox "菜名" [ref=e108]: 虾仁蚕豆蒸蛋羹
+                  - textbox "食材，逗号分隔。如：鲈鱼 1 条, 葱姜适量, 蒸鱼豉油" [ref=e109]: 鸡蛋 4 个, 河虾仁 150 克, 嫩蚕豆瓣 120 克, 温水 450 毫升, 葱花少许
+                - generic [ref=e110]:
+                  - generic [ref=e111]:
+                    - generic [ref=e112]: 蔬菜
+                    - button "换一道" [ref=e113]:
+                      - img [ref=e114]
+                      - text: 换一道
+                  - textbox "菜名" [ref=e117]: 蒜蓉塌棵菜
+                  - textbox "食材，逗号分隔。如：鲈鱼 1 条, 葱姜适量, 蒸鱼豉油" [ref=e118]: 塌棵菜 500 克, 蒜末 10 克, 菜籽油 2 茶匙
+                - generic [ref=e119]:
+                  - generic [ref=e120]:
+                    - generic [ref=e121]: 凉菜
+                    - button "换一道" [ref=e122]:
+                      - img [ref=e123]
+                      - text: 换一道
+                  - textbox "菜名" [ref=e126]: 马兰头拌香干
+                  - textbox "食材，逗号分隔。如：鲈鱼 1 条, 葱姜适量, 蒸鱼豉油" [ref=e127]: 马兰头 300 克, 香干 3 块, 芝麻油 半茶匙, 低钠生抽 1 茶匙
+                - generic [ref=e128]:
+                  - generic [ref=e129]:
+                    - generic [ref=e130]: 汤
+                    - button "换一道" [ref=e131]:
+                      - img [ref=e132]
+                      - text: 换一道
+                  - textbox "菜名" [ref=e135]: 番茄海带豆腐汤
+                  - textbox "食材，逗号分隔。如：鲈鱼 1 条, 葱姜适量, 蒸鱼豉油" [ref=e136]: 本地番茄 2 个, 海带结 150 克, 嫩豆腐 1 盒, 香菇 4 朵, 姜片 2 片
+            - generic [ref=e137]:
+              - generic [ref=e138]:
+                - generic [ref=e139]: 周三
+                - generic [ref=e140]: 05-06
+              - generic [ref=e141]:
+                - generic [ref=e142]:
+                  - generic [ref=e143]:
+                    - generic [ref=e144]: 主荤
+                    - button "换一道" [ref=e145]:
+                      - img [ref=e146]
+                      - text: 换一道
+                  - textbox "菜名" [ref=e149]: 清炖陈皮萝卜牛腱
+                  - textbox "食材，逗号分隔。如：鲈鱼 1 条, 葱姜适量, 蒸鱼豉油" [ref=e150]: 牛腱肉 600 克, 白萝卜 1 根, 陈皮 1 小片, 香叶 1 片, 姜片 4 片, 葱段适量
+                - generic [ref=e151]:
+                  - generic [ref=e152]:
+                    - generic [ref=e153]: 副荤
+                    - button "换一道" [ref=e154]:
+                      - img [ref=e155]
+                      - text: 换一道
+                  - textbox "菜名" [ref=e158]: 莼菜鸡丝烩豆腐
+                  - textbox "食材，逗号分隔。如：鲈鱼 1 条, 葱姜适量, 蒸鱼豉油" [ref=e159]: 鸡胸肉 250 克, 莼菜 150 克, 嫩豆腐 1 盒, 蛋清 1 个, 姜丝少许
+                - generic [ref=e160]:
+                  - generic [ref=e161]:
+                    - generic [ref=e162]: 蔬菜
+                    - button "换一道" [ref=e163]:
+                      - img [ref=e164]
+                      - text: 换一道
+                  - textbox "菜名" [ref=e167]: 豌豆胡萝卜炒鸡头米
+                  - textbox "食材，逗号分隔。如：鲈鱼 1 条, 葱姜适量, 蒸鱼豉油" [ref=e168]: 鲜豌豆 200 克, 胡萝卜 半根, 鸡头米 120 克, 菜籽油 2 茶匙
+                - generic [ref=e169]:
+                  - generic [ref=e170]:
+                    - generic [ref=e171]: 凉菜
+                    - button "换一道" [ref=e172]:
+                      - img [ref=e173]
+                      - text: 换一道
+                  - textbox "菜名" [ref=e176]: 白灼芦笋黑木耳
+                  - textbox "食材，逗号分隔。如：鲈鱼 1 条, 葱姜适量, 蒸鱼豉油" [ref=e177]: 芦笋 300 克, 黑木耳 泡发后150 克, 蒜末少许, 低钠生抽 1 茶匙, 米醋 1 茶匙
+                - generic [ref=e178]:
+                  - generic [ref=e179]:
+                    - generic [ref=e180]: 汤
+                    - button "换一道" [ref=e181]:
+                      - img [ref=e182]
+                      - text: 换一道
+                  - textbox "菜名" [ref=e185]: 枸杞香菇鸡汤
+                  - textbox "食材，逗号分隔。如：鲈鱼 1 条, 葱姜适量, 蒸鱼豉油" [ref=e186]: 去皮鸡翅根 5 个, 鲜香菇 8 朵, 枸杞 10 克, 姜片 3 片, 葱段适量
+            - generic [ref=e187]:
+              - generic [ref=e188]:
+                - generic [ref=e189]: 周四
+                - generic [ref=e190]: 05-07
+              - generic [ref=e191]:
+                - generic [ref=e192]:
+                  - generic [ref=e193]:
+                    - generic [ref=e194]: 主荤
+                    - button "换一道" [ref=e195]:
+                      - img [ref=e196]
+                      - text: 换一道
+                  - textbox "菜名" [ref=e199]: 迷迭香清烤鳕鱼
+                  - textbox "食材，逗号分隔。如：鲈鱼 1 条, 葱姜适量, 蒸鱼豉油" [ref=e200]: 鳕鱼排 600 克, 迷迭香 1 小枝, 柠檬 半个, 黑胡椒 少许, 橄榄油 1 茶匙
+                - generic [ref=e201]:
+                  - generic [ref=e202]:
+                    - generic [ref=e203]: 副荤
+                    - button "换一道" [ref=e204]:
+                      - img [ref=e205]
+                      - text: 换一道
+                  - textbox "菜名" [ref=e208]: 肉末蒸嫩豆腐
+                  - textbox "食材，逗号分隔。如：鲈鱼 1 条, 葱姜适量, 蒸鱼豉油" [ref=e209]: 瘦猪肉末 180 克, 嫩豆腐 2 盒, 鸡蛋 1 个, 葱姜水 2 汤匙, 低钠生抽 1 茶匙
+                - generic [ref=e210]:
+                  - generic [ref=e211]:
+                    - generic [ref=e212]: 蔬菜
+                    - button "换一道" [ref=e213]:
+                      - img [ref=e214]
+                      - text: 换一道
+                  - textbox "菜名" [ref=e217]: 洋葱芹菜炒蘑菇
+                  - textbox "食材，逗号分隔。如：鲈鱼 1 条, 葱姜适量, 蒸鱼豉油" [ref=e218]: 洋葱 1 个, 芹菜 250 克, 口蘑 200 克, 蒜片少许, 菜籽油 2 茶匙
+                - generic [ref=e219]:
+                  - generic [ref=e220]:
+                    - generic [ref=e221]: 凉菜
+                    - button "换一道" [ref=e222]:
+                      - img [ref=e223]
+                      - text: 换一道
+                  - textbox "菜名" [ref=e226]: 酸奶黄瓜鸡丝
+                  - textbox "食材，逗号分隔。如：鲈鱼 1 条, 葱姜适量, 蒸鱼豉油" [ref=e227]: 本地黄瓜 2 根, 鸡胸肉 200 克, 无糖酸奶 100 克, 柠檬汁 1 茶匙
+                - generic [ref=e228]:
+                  - generic [ref=e229]:
+                    - generic [ref=e230]: 汤
+                    - button "换一道" [ref=e231]:
+                      - img [ref=e232]
+                      - text: 换一道
+                  - textbox "菜名" [ref=e235]: 冬瓜河虾皮汤
+                  - textbox "食材，逗号分隔。如：鲈鱼 1 条, 葱姜适量, 蒸鱼豉油" [ref=e236]: 冬瓜 500 克, 河虾皮 15 克, 嫩豆腐 半盒, 姜丝少许, 葱花少许
+            - generic [ref=e237]:
+              - generic [ref=e238]:
+                - generic [ref=e239]: 周五
+                - generic [ref=e240]: 05-08
+              - generic [ref=e241]:
+                - generic [ref=e242]:
+                  - generic [ref=e243]:
+                    - generic [ref=e244]: 主荤
+                    - button "换一道" [ref=e245]:
+                      - img [ref=e246]
+                      - text: 换一道
+                  - textbox "菜名" [ref=e249]: 葱姜白灼河虾
+                  - textbox "食材，逗号分隔。如：鲈鱼 1 条, 葱姜适量, 蒸鱼豉油" [ref=e250]: 河虾 500 克, 葱段适量, 姜片 4 片, 料酒 1 茶匙
+                - generic [ref=e251]:
+                  - generic [ref=e252]:
+                    - generic [ref=e253]: 副荤
+                    - button "换一道" [ref=e254]:
+                      - img [ref=e255]
+                      - text: 换一道
+                  - textbox "菜名" [ref=e258]: 罗勒番茄鸡胸烩
+                  - textbox "食材，逗号分隔。如：鲈鱼 1 条, 葱姜适量, 蒸鱼豉油" [ref=e259]: 鸡胸肉 450 克, 本地番茄 3 个, 罗勒叶 6 片, 洋葱 半个, 橄榄油 2 茶匙
+                - generic [ref=e260]:
+                  - generic [ref=e261]:
+                    - generic [ref=e262]: 蔬菜
+                    - button "换一道" [ref=e263]:
+                      - img [ref=e264]
+                      - text: 换一道
+                  - textbox "菜名" [ref=e267]: 蚕豆瓣炒茭白
+                  - textbox "食材，逗号分隔。如：鲈鱼 1 条, 葱姜适量, 蒸鱼豉油" [ref=e268]: 嫩蚕豆瓣 250 克, 茭白 3 根, 胡萝卜 半根, 菜籽油 2 茶匙
+                - generic [ref=e269]:
+                  - generic [ref=e270]:
+                    - generic [ref=e271]: 凉菜
+                    - button "换一道" [ref=e272]:
+                      - img [ref=e273]
+                      - text: 换一道
+                  - textbox "菜名" [ref=e276]: 凉拌莴笋丝黑木耳
+                  - textbox "食材，逗号分隔。如：鲈鱼 1 条, 葱姜适量, 蒸鱼豉油" [ref=e277]: 莴笋 1 根, 黑木耳 泡发后120 克, 米醋 1 汤匙, 芝麻油 半茶匙
+                - generic [ref=e278]:
+                  - generic [ref=e279]:
+                    - generic [ref=e280]: 汤
+                    - button "换一道" [ref=e281]:
+                      - img [ref=e282]
+                      - text: 换一道
+                  - textbox "菜名" [ref=e285]: 丝瓜蛋花汤
+                  - textbox "食材，逗号分隔。如：鲈鱼 1 条, 葱姜适量, 蒸鱼豉油" [ref=e286]: 丝瓜 2 根, 鸡蛋 2 个, 嫩豆腐 半盒, 姜丝少许
+            - generic [ref=e287]:
+              - generic [ref=e288]:
+                - generic [ref=e289]: 周六
+                - generic [ref=e290]: 05-09
+              - generic [ref=e291]:
+                - generic [ref=e292]:
+                  - generic [ref=e293]:
+                    - generic [ref=e294]: 主荤
+                    - button "换一道" [ref=e295]:
+                      - img [ref=e296]
+                      - text: 换一道
+                  - textbox "菜名" [ref=e299]: 少糖糖醋鲈鱼块
+                  - textbox "食材，逗号分隔。如：鲈鱼 1 条, 葱姜适量, 蒸鱼豉油" [ref=e300]: 鲈鱼 1 条, 姜片 3 片, 米醋 2 汤匙, 番茄 1 个, 冰糖 5 克, 低钠生抽 1 茶匙
+                - generic [ref=e301]:
+                  - generic [ref=e302]:
+                    - generic [ref=e303]: 副荤
+                    - button "换一道" [ref=e304]:
+                      - img [ref=e305]
+                      - text: 换一道
+                  - textbox "菜名" [ref=e308]: 花椒香叶炖鸭腿冬瓜
+                  - textbox "食材，逗号分隔。如：鲈鱼 1 条, 葱姜适量, 蒸鱼豉油" [ref=e309]: 去皮鸭腿 3 只, 冬瓜 500 克, 花椒 6 粒, 香叶 1 片, 姜片 4 片, 葱段适量
+                - generic [ref=e310]:
+                  - generic [ref=e311]:
+                    - generic [ref=e312]: 蔬菜
+                    - button "换一道" [ref=e313]:
+                      - img [ref=e314]
+                      - text: 换一道
+                  - textbox "菜名" [ref=e317]: 清炒豌豆苗香菇
+                  - textbox "食材，逗号分隔。如：鲈鱼 1 条, 葱姜适量, 蒸鱼豉油" [ref=e318]: 豌豆苗 400 克, 鲜香菇 6 朵, 蒜片少许, 菜籽油 2 茶匙
+                - generic [ref=e319]:
+                  - generic [ref=e320]:
+                    - generic [ref=e321]: 凉菜
+                    - button "换一道" [ref=e322]:
+                      - img [ref=e323]
+                      - text: 换一道
+                  - textbox "菜名" [ref=e326]: 糟卤鸡头米毛豆仁
+                  - textbox "食材，逗号分隔。如：鲈鱼 1 条, 葱姜适量, 蒸鱼豉油" [ref=e327]: 鸡头米 150 克, 毛豆仁 200 克, 低盐糟卤 60 毫升, 姜片 2 片
+                - generic [ref=e328]:
+                  - generic [ref=e329]:
+                    - generic [ref=e330]: 汤
+                    - button "换一道" [ref=e331]:
+                      - img [ref=e332]
+                      - text: 换一道
+                  - textbox "菜名" [ref=e335]: 莼菜番茄鱼丸汤
+                  - textbox "食材，逗号分隔。如：鲈鱼 1 条, 葱姜适量, 蒸鱼豉油" [ref=e336]: 莼菜 150 克, 自制鱼丸 250 克, 本地番茄 2 个, 蛋清 1 个, 姜丝少许
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e342] [cursor=pointer]:
+    - img [ref=e343]

@@ -76,7 +76,7 @@ export async function runAutoWeekGeneration(
   }
 }
 
-async function runImagePipeline(
+export async function runImagePipeline(
   weekStart: Date,
   days: Parameters<typeof generateDishPhotosForWeek>[0]["days"],
 ): Promise<void> {

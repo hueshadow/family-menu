@@ -1,0 +1,130 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - link "家庭菜单" [ref=e5] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e6]: 🍱
+          - generic [ref=e7]: 家庭菜单
+        - generic [ref=e8]: 苏州本帮 · 江浙家常
+      - navigation [ref=e9]:
+        - link "主页" [ref=e10] [cursor=pointer]:
+          - /url: /
+        - link "采购清单" [ref=e11] [cursor=pointer]:
+          - /url: /shopping
+        - link "家庭档案" [ref=e12] [cursor=pointer]:
+          - /url: /family
+        - link "营养趋势" [ref=e13] [cursor=pointer]:
+          - /url: /trend
+        - link "历史" [ref=e14] [cursor=pointer]:
+          - /url: /history
+    - main [ref=e15]:
+      - generic [ref=e16]:
+        - generic [ref=e17]:
+          - generic [ref=e18]:
+            - generic [ref=e19]: 🍱
+            - generic [ref=e20]: 苏州本帮 · 江浙家常
+          - heading "家 庭 菜 单" [level=1] [ref=e21]
+          - paragraph [ref=e22]: 🌱 5 月苏州时令优选：蚕豆、豌豆、莼菜、鸡头米（嫩苞）、黄瓜（本地）、番茄（本地）、枇杷、杨梅（月底）、河虾、白鱼、黄鳝
+        - generic [ref=e23]:
+          - generic [ref=e24]:
+            - generic [ref=e25]:
+              - img [ref=e26]
+              - generic [ref=e29]: 今日 · 5月5日星期二
+            - button "分享至微信" [ref=e30]:
+              - img
+              - text: 分享至微信
+          - link "今日餐桌：少油红烧黄鳝段、虾仁蚕豆蒸蛋羹、蒜蓉塌棵菜、马兰头拌香干、番茄海带豆腐汤" [ref=e31] [cursor=pointer]:
+            - /url: /today
+            - img "今日餐桌：少油红烧黄鳝段、虾仁蚕豆蒸蛋羹、蒜蓉塌棵菜、马兰头拌香干、番茄海带豆腐汤" [ref=e32]
+          - generic [ref=e33]:
+            - paragraph [ref=e34]: 🍖 少油红烧黄鳝段 · 🍳 虾仁蚕豆蒸蛋羹 · 🥬 蒜蓉塌棵菜 · 🥗 马兰头拌香干 · 🍲 番茄海带豆腐汤
+            - link "查看食材与做法" [ref=e35] [cursor=pointer]:
+              - /url: /today
+              - text: 查看食材与做法
+              - img [ref=e36]
+        - generic [ref=e38]:
+          - generic [ref=e39]:
+            - generic [ref=e40]:
+              - img [ref=e41]
+              - generic [ref=e43]: 本周菜单 · 05-04–05-09
+            - generic [ref=e45]:
+              - img
+              - text: AI 自动生成
+          - link "本周菜单 2026-05-04 – 2026-05-09" [ref=e46] [cursor=pointer]:
+            - /url: /menu
+            - img "本周菜单 2026-05-04 – 2026-05-09" [ref=e47]
+          - generic [ref=e48]:
+            - generic [ref=e49]:
+              - generic [ref=e50]:
+                - generic [ref=e51]: 周一
+                - generic [ref=e52]: 05-04
+                - generic [ref=e53]: 5 道菜
+              - generic [ref=e54]:
+                - generic [ref=e55]: 周二
+                - generic [ref=e56]: 05-05
+                - generic [ref=e57]: 5 道菜
+              - generic [ref=e58]:
+                - generic [ref=e59]: 周三
+                - generic [ref=e60]: 05-06
+                - generic [ref=e61]: 5 道菜
+              - generic [ref=e62]:
+                - generic [ref=e63]: 周四
+                - generic [ref=e64]: 05-07
+                - generic [ref=e65]: 5 道菜
+              - generic [ref=e66]:
+                - generic [ref=e67]: 周五
+                - generic [ref=e68]: 05-08
+                - generic [ref=e69]: 5 道菜
+              - generic [ref=e70]:
+                - generic [ref=e71]: 周六
+                - generic [ref=e72]: 05-09
+                - generic [ref=e73]: 5 道菜
+            - generic [ref=e74]:
+              - button "分享本周" [ref=e75]:
+                - img
+                - text: 分享本周
+              - link "编辑菜单" [ref=e76] [cursor=pointer]:
+                - /url: /menu
+                - text: 编辑菜单
+                - img [ref=e77]
+        - generic [ref=e79]:
+          - generic [ref=e80]:
+            - generic [ref=e81]:
+              - img [ref=e82]
+              - generic [ref=e85]: 采购清单
+            - generic [ref=e86]: 0 / 78
+          - generic [ref=e87]:
+            - paragraph [ref=e89]: 已购 0% · 剩 78 项待购
+            - generic [ref=e90]:
+              - button "分享至微信" [ref=e91]:
+                - img
+                - text: 分享至微信
+              - link "勾选已购" [ref=e92] [cursor=pointer]:
+                - /url: /shopping
+                - text: 勾选已购
+                - img [ref=e93]
+        - generic [ref=e95]:
+          - link "家庭档案 5 名成员处方 · 体检报告" [ref=e96] [cursor=pointer]:
+            - /url: /family
+            - generic [ref=e98]:
+              - img [ref=e100]
+              - generic [ref=e105]:
+                - generic [ref=e106]: 家庭档案
+                - generic [ref=e107]: 5 名成员处方 · 体检报告
+          - link "营养趋势 近期 7 项指标" [ref=e108] [cursor=pointer]:
+            - /url: /trend
+            - generic [ref=e110]:
+              - img [ref=e112]
+              - generic [ref=e115]:
+                - generic [ref=e116]: 营养趋势
+                - generic [ref=e117]: 近期 7 项指标
+          - link "历史菜单 过往 50 周存档" [ref=e118] [cursor=pointer]:
+            - /url: /history
+            - generic [ref=e120]:
+              - img [ref=e122]
+              - generic [ref=e125]:
+                - generic [ref=e126]: 历史菜单
+                - generic [ref=e127]: 过往 50 周存档
+        - paragraph [ref=e129]: 每周日 09:00 自动出下周菜单 · 共 6 / 6 天已编排
+  - region "Notifications alt+T"

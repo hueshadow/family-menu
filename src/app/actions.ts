@@ -3,6 +3,7 @@
 import { readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { revalidatePath } from "next/cache";
+import { runImagePipeline } from "@/lib/auto-gen";
 import {
   aggregateAndStoreShoppingList,
   getAllReports,
@@ -35,9 +36,17 @@ import { getPdfPageCount } from "@/lib/pdf";
 import { type DayInput, type MemberRole } from "@/lib/shared";
 import { DISH_SLOTS } from "@/lib/shared";
 
-export async function saveWeekAction(weekId: string, days: DayInput[]) {
+export async function saveWeekAction(
+  weekId: string,
+  weekStart: string,
+  days: DayInput[],
+) {
   await saveWeek(weekId, days);
   await aggregateAndStoreShoppingList(weekId, days);
+  void runImagePipeline(new Date(weekStart), days).catch((e) => {
+    console.error("[saveWeekAction] image pipeline failed:", e);
+  });
+  revalidatePath("/");
   revalidatePath("/menu");
   revalidatePath("/shopping");
   revalidatePath("/today");
@@ -92,6 +101,10 @@ export async function generateWeekAction(
     });
     await saveWeek(weekId, days);
     await aggregateAndStoreShoppingList(weekId, days);
+    void runImagePipeline(startDate, days).catch((e) => {
+      console.error("[generateWeekAction] image pipeline failed:", e);
+    });
+    revalidatePath("/");
     revalidatePath("/menu");
     revalidatePath("/shopping");
     revalidatePath("/today");

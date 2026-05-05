@@ -21,7 +21,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <span className="font-display text-lg tracking-wide">家庭菜单</span>
           </Link>
           <span className="text-xs text-muted-foreground">
-            苏州本帮 · 江浙家常
+            江浙家常 · 多元菜系
           </span>
         </div>
         <nav className="flex flex-wrap gap-1 border-t border-border/40 px-2 py-1.5 text-sm">

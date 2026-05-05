@@ -52,7 +52,7 @@ export function SubstituteHelper({ dishName }: { dishName: string }) {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>替代食材</DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-base leading-relaxed">
               做「{dishName}」时缺什么食材？AI 用家里常备的给你 3 个替代
             </DialogDescription>
           </DialogHeader>
