@@ -2,7 +2,6 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RecipeBlock } from "@/components/recipe-block";
-import { ShareButton } from "@/components/share-button";
 import { SubstituteHelper } from "@/components/substitute-helper";
 import {
   getOrCreateWeek,
@@ -10,7 +9,6 @@ import {
   isoDate,
   mondayOf,
 } from "@/lib/db";
-import { formatDayMenu } from "@/lib/share-formatter";
 import { DISH_ICONS, DISH_SLOTS } from "@/lib/shared";
 
 export const dynamic = "force-dynamic";

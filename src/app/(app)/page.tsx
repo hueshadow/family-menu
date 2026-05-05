@@ -13,7 +13,7 @@ import {
 } from "@/lib/db";
 import { DISH_PHOTOS_DIR } from "@/lib/dish-photos";
 import { describeSeasonal } from "@/lib/seasonal";
-import { formatDayMenu, formatShoppingList } from "@/lib/share-formatter";
+import { formatDayMenu, formatShoppingList, formatWeekMenu } from "@/lib/share-formatter";
 import { DISH_ICONS, WEEKDAYS } from "@/lib/shared";
 import { TABLE_PHOTOS_DIR } from "@/lib/table-photo";
 
@@ -242,6 +242,21 @@ export default async function Home() {
               </section>
             );
           })}
+        </CardContent>
+        <CardContent className="flex flex-wrap items-center gap-3 border-t border-border/40 py-3 text-xs text-muted-foreground">
+          <ShareButton
+            text={formatWeekMenu(week.days)}
+            title="本周菜单"
+            label="分享本周"
+            size="sm"
+            variant="outline"
+          />
+          <Link
+            href="/menu"
+            className="inline-flex items-center gap-1 hover:text-primary"
+          >
+            进入菜单详情 <ArrowRight className="size-3" />
+          </Link>
         </CardContent>
       </Card>
 
