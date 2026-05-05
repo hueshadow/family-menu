@@ -9,7 +9,9 @@ import {
   query,
   saveWeek,
 } from "@/lib/db";
+import { generateDishPhotosForWeek } from "@/lib/dish-photos";
 import { generateWeekMenu } from "@/lib/menu-gen";
+import { composeMenuBoard } from "@/lib/menu-board";
 
 export async function runAutoWeekGeneration(
   weekStart: Date,
@@ -58,11 +60,41 @@ export async function runAutoWeekGeneration(
       `update weekly_menus set auto_generated = true where id = $1`,
       [week.id],
     );
-    return { status: "generated", reason: `week ${isoDate(weekStart)} ${days.length} days` };
+
+    // Image pipeline (failure does NOT abort menu generation — purely cosmetic)
+    void runImagePipeline(weekStart, days).catch((e) => {
+      console.error("[auto-gen] image pipeline failed:", e);
+    });
+
+    return { status: "generated", reason: `week ${isoDate(weekStart)} ${days.length} days · image pipeline detached` };
   } catch (e) {
     return {
       status: "error",
       reason: e instanceof Error ? e.message : String(e),
     };
   }
+}
+
+async function runImagePipeline(
+  weekStart: Date,
+  days: Parameters<typeof generateDishPhotosForWeek>[0]["days"],
+): Promise<void> {
+  console.log("[auto-gen] starting image pipeline (~7 min)…");
+  const t0 = Date.now();
+  const result = await generateDishPhotosForWeek({
+    days,
+    onProgress: (msg) => console.log(`[auto-gen·dish-photos] ${msg}`),
+  });
+  console.log(
+    `[auto-gen] dish photos · ${result.ok}/${result.total} ok · ${((Date.now() - t0) / 1000).toFixed(0)}s`,
+  );
+  if (result.ok === 0) {
+    console.warn("[auto-gen] no photos generated, skipping board composition");
+    return;
+  }
+  const boardPath = await composeMenuBoard({
+    weekStart: isoDate(weekStart),
+    days,
+  });
+  console.log(`[auto-gen] menu board → ${boardPath}`);
 }

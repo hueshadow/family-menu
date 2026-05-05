@@ -10,7 +10,7 @@ const TICK_INTERVAL_MS = 5 * 60 * 1000; // 5 min
 export function startScheduler(): void {
   if (globalThis.__familyMenuScheduler?.started) return;
   globalThis.__familyMenuScheduler = { started: true, lastRun: null };
-  console.log("[scheduler] started · 周日 22:00 自动生成下周菜单");
+  console.log("[scheduler] started · 周日 09:00 自动生成下周菜单");
 
   setInterval(() => {
     void tick().catch((e) => {
@@ -44,8 +44,8 @@ async function tick(): Promise<void> {
   const dow = now.getDay(); // 0 = Sunday
   const hour = now.getHours();
 
-  // Run only Sunday 22:00–22:59 local time
-  if (dow !== 0 || hour !== 22) return;
+  // Run only Sunday 09:00–09:59 local time
+  if (dow !== 0 || hour !== 9) return;
 
   const tomorrow = new Date(now);
   tomorrow.setHours(0, 0, 0, 0);

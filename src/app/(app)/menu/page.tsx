@@ -29,7 +29,7 @@ export default async function MamaHome() {
             <Badge className="text-xs">🤖 AI 自动生成</Badge>
           ) : null}
           <span className="text-xs text-muted-foreground/80">
-            🕘 周日 22:00 自动生成
+            🕘 周日 09:00 自动生成
           </span>
         </div>
       </div>

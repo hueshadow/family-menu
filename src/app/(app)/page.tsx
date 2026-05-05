@@ -225,7 +225,7 @@ export default async function Home() {
       </section>
 
       <footer className="text-center text-xs text-muted-foreground/70">
-        <p>每周日 22:00 自动出下周菜单 · 共 {filledDays} / {week.days.length} 天已编排</p>
+        <p>每周日 09:00 自动出下周菜单 · 共 {filledDays} / {week.days.length} 天已编排</p>
       </footer>
     </div>
   );
