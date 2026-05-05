@@ -186,14 +186,16 @@ export default async function Home() {
             <Sunrise className="size-4 text-primary" />
             <span className="font-display text-xl">明日 · {tomorrowLabel}</span>
           </CardTitle>
-          <Link
-            href="/shopping"
-            className="inline-flex items-center gap-1.5 rounded-md border border-border/60 bg-card px-3 py-1.5 text-xs text-muted-foreground transition hover:border-primary/50 hover:bg-primary/5 hover:text-primary"
-          >
-            <ClipboardList className="size-3.5" />
-            采购清单
-            <ArrowRight className="size-3" />
-          </Link>
+          {tomorrow ? (
+            <Link
+              href={`/shopping/${tomorrowIso}`}
+              className="inline-flex items-center gap-1.5 rounded-md border border-border/60 bg-card px-3 py-1.5 text-xs text-muted-foreground transition hover:border-primary/50 hover:bg-primary/5 hover:text-primary"
+            >
+              <ClipboardList className="size-3.5" />
+              明日采购
+              <ArrowRight className="size-3" />
+            </Link>
+          ) : null}
         </CardHeader>
         {!tomorrow ? (
           <CardContent className="pt-4 text-sm">

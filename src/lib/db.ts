@@ -519,7 +519,7 @@ function mergeQty(qtys: string[]): string {
   return parts.join(" + ");
 }
 
-function aggregateIngredients(days: DayInput[]): ShoppingItem[] {
+export function aggregateIngredients(days: DayInput[]): ShoppingItem[] {
   interface Entry {
     qty: string[];
     category: string;
