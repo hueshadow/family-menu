@@ -1,3 +1,5 @@
+import { access } from "node:fs/promises";
+import { join } from "node:path";
 import Link from "next/link";
 import { ArrowRight, BookOpen, Clipboard, ClipboardList, LineChart, Sparkles, Users, Utensils } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +14,7 @@ import {
 import { describeSeasonal } from "@/lib/seasonal";
 import { formatDayMenu, formatShoppingList, formatWeekMenu } from "@/lib/share-formatter";
 import { DISH_ICONS, WEEKDAYS } from "@/lib/shared";
+import { TABLE_PHOTOS_DIR } from "@/lib/table-photo";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +34,16 @@ export default async function Home() {
   const todayWeekdayIdx = today
     ? week.days.findIndex((d) => d.date === todayIso)
     : -1;
+
+  let hasTodayTablePhoto = false;
+  if (today) {
+    try {
+      await access(join(TABLE_PHOTOS_DIR, `${todayIso}.png`));
+      hasTodayTablePhoto = true;
+    } catch {
+      hasTodayTablePhoto = false;
+    }
+  }
 
   const filledDays = week.days.filter((d) => d.dishes.some((x) => x.name.trim())).length;
   const totalItems = list?.items.length ?? 0;
@@ -58,7 +71,7 @@ export default async function Home() {
       </header>
 
       {/* Today */}
-      <Card className="border-border/70 bg-card">
+      <Card className="overflow-hidden border-border/70 bg-card">
         <CardHeader className="flex flex-row items-baseline justify-between border-b border-border/40">
           <CardTitle className="flex items-baseline gap-2 text-lg">
             <Utensils className="size-4 text-primary" />
@@ -74,12 +87,14 @@ export default async function Home() {
             />
           ) : null}
         </CardHeader>
-        <CardContent className="space-y-2 pt-4 text-sm">
-          {!today ? (
+        {!today ? (
+          <CardContent className="pt-4 text-sm">
             <p className="text-muted-foreground">
               今天是周日 / 计划之外的日子，由家里自由安排。
             </p>
-          ) : today.dishes.every((d) => !d.name.trim()) ? (
+          </CardContent>
+        ) : today.dishes.every((d) => !d.name.trim()) ? (
+          <CardContent className="pt-4 text-sm">
             <p className="text-muted-foreground">
               本周菜单还没生成。
               <Link
@@ -89,27 +104,50 @@ export default async function Home() {
                 去 AI 一键生成 →
               </Link>
             </p>
-          ) : (
-            <ul className="space-y-1.5">
-              {today.dishes.map((dish, i) =>
-                dish.name.trim() ? (
-                  <li key={i} className="flex items-baseline gap-2">
-                    <span className="text-base">{DISH_ICONS[i]}</span>
-                    <span>{dish.name}</span>
-                  </li>
-                ) : null,
-              )}
-            </ul>
-          )}
-          <div className="pt-2">
-            <Link
-              href="/today"
-              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary"
-            >
-              查看食材与做法 <ArrowRight className="size-3" />
-            </Link>
-          </div>
-        </CardContent>
+          </CardContent>
+        ) : (
+          <>
+            {hasTodayTablePhoto ? (
+              <Link href="/today" className="block">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`/api/photo/table/${todayIso}`}
+                  alt={`今日餐桌：${today.dishes.map((d) => d.name).filter(Boolean).join("、")}`}
+                  className="aspect-square w-full object-cover transition hover:opacity-95"
+                />
+              </Link>
+            ) : (
+              <CardContent className="pt-4 text-sm">
+                <ul className="space-y-1.5">
+                  {today.dishes.map((dish, i) =>
+                    dish.name.trim() ? (
+                      <li key={i} className="flex items-baseline gap-2">
+                        <span className="text-base">{DISH_ICONS[i]}</span>
+                        <span>{dish.name}</span>
+                      </li>
+                    ) : null,
+                  )}
+                </ul>
+              </CardContent>
+            )}
+            <CardContent className="border-t border-border/40 py-3 text-xs text-muted-foreground">
+              <p className="mb-2 leading-relaxed">
+                {today.dishes
+                  .map((d, i) =>
+                    d.name.trim() ? `${DISH_ICONS[i]} ${d.name}` : null,
+                  )
+                  .filter(Boolean)
+                  .join("　·　")}
+              </p>
+              <Link
+                href="/today"
+                className="inline-flex items-center gap-1 hover:text-primary"
+              >
+                查看食材与做法 <ArrowRight className="size-3" />
+              </Link>
+            </CardContent>
+          </>
+        )}
       </Card>
 
       {/* Week menu summary */}

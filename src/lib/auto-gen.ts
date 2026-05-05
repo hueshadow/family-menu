@@ -12,6 +12,7 @@ import {
 import { generateDishPhotosForWeek } from "@/lib/dish-photos";
 import { generateWeekMenu } from "@/lib/menu-gen";
 import { composeMenuBoard } from "@/lib/menu-board";
+import { generateWeekTablePhotos } from "@/lib/table-photo";
 
 export async function runAutoWeekGeneration(
   weekStart: Date,
@@ -79,17 +80,27 @@ async function runImagePipeline(
   weekStart: Date,
   days: Parameters<typeof generateDishPhotosForWeek>[0]["days"],
 ): Promise<void> {
-  console.log("[auto-gen] starting image pipeline (~7 min)…");
+  console.log("[auto-gen] starting image pipeline (~10 min)…");
   const t0 = Date.now();
-  const result = await generateDishPhotosForWeek({
+
+  const dishResult = await generateDishPhotosForWeek({
     days,
     onProgress: (msg) => console.log(`[auto-gen·dish-photos] ${msg}`),
   });
   console.log(
-    `[auto-gen] dish photos · ${result.ok}/${result.total} ok · ${((Date.now() - t0) / 1000).toFixed(0)}s`,
+    `[auto-gen] dish photos · ${dishResult.ok}/${dishResult.total} ok · ${((Date.now() - t0) / 1000).toFixed(0)}s`,
   );
-  if (result.ok === 0) {
-    console.warn("[auto-gen] no photos generated, skipping board composition");
+
+  const tableResult = await generateWeekTablePhotos({
+    days,
+    onProgress: (msg) => console.log(`[auto-gen·table-photos] ${msg}`),
+  });
+  console.log(
+    `[auto-gen] table photos · ${tableResult.ok}/${tableResult.total} ok · ${((Date.now() - t0) / 1000).toFixed(0)}s`,
+  );
+
+  if (dishResult.ok === 0) {
+    console.warn("[auto-gen] no dish photos, skipping board composition");
     return;
   }
   const boardPath = await composeMenuBoard({
