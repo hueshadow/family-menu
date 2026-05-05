@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { MenuEditor } from "@/components/menu-editor";
 import { getOrCreateWeek, mondayOf } from "@/lib/db";
@@ -5,13 +7,20 @@ import { describeSeasonal } from "@/lib/seasonal";
 
 export const dynamic = "force-dynamic";
 
-export default async function MamaHome() {
+export default async function MenuPage() {
   const monday = mondayOf();
   const week = await getOrCreateWeek(monday);
   const seasonal = describeSeasonal(monday);
 
   return (
     <div className="space-y-6">
+      <Link
+        href="/"
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground transition hover:text-primary"
+      >
+        <ChevronLeft className="size-4" />
+        返回首页
+      </Link>
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
           <h3 className="font-display text-3xl tracking-wide">本周菜单</h3>

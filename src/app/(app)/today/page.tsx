@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RecipeBlock } from "@/components/recipe-block";
 import { ShareButton } from "@/components/share-button";
@@ -28,6 +30,7 @@ export default async function AyiHome() {
   if (!today) {
     return (
       <div className="space-y-4">
+        <BackLink />
         <div className="rounded-md border p-4">
           <h3 className="font-display text-xl tracking-wide">{todayLabel}</h3>
           <p className="mt-2 text-sm text-muted-foreground">
@@ -49,6 +52,7 @@ export default async function AyiHome() {
 
   return (
     <div className="space-y-4">
+      <BackLink />
       <div className="flex flex-wrap items-start justify-between gap-3 rounded-md border p-4">
         <div>
           <h3 className="font-display text-xl tracking-wide">{todayLabel}</h3>
@@ -111,5 +115,17 @@ export default async function AyiHome() {
         })}
       </div>
     </div>
+  );
+}
+
+function BackLink() {
+  return (
+    <Link
+      href="/"
+      className="inline-flex items-center gap-1 text-sm text-muted-foreground transition hover:text-primary"
+    >
+      <ChevronLeft className="size-4" />
+      返回首页
+    </Link>
   );
 }
