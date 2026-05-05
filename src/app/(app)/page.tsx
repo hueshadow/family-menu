@@ -235,11 +235,21 @@ export default async function Home() {
               本周菜单 · {week.days[0].date.slice(5)}–{week.days[5].date.slice(5)}
             </span>
           </CardTitle>
-          <DownloadImageButton
-            url={`/api/photo/menu-board/${week.week_start}`}
-            filename={`${week.week_start}-本周菜单.png`}
-            label="本周图片"
-          />
+          <div className="flex items-center gap-2">
+            <DownloadImageButton
+              url={`/api/photo/menu-board/${week.week_start}`}
+              filename={`${week.week_start}-本周菜单.png`}
+              label="本周图片"
+            />
+            <Link
+              href="/shopping"
+              className="inline-flex items-center gap-1.5 rounded-md border border-border/60 bg-card px-3 py-1.5 text-xs text-muted-foreground transition hover:border-primary/50 hover:bg-primary/5 hover:text-primary"
+            >
+              <ClipboardList className="size-3.5" />
+              本周采购
+              <ArrowRight className="size-3" />
+            </Link>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4 pt-4">
           {week.days.map((day, dayIdx) => {
