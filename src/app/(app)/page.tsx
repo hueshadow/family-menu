@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, BookOpen, Clipboard, ClipboardList, FileHeart, LineChart, Sparkles, Users, Utensils } from "lucide-react";
+import { ArrowRight, BookOpen, Clipboard, ClipboardList, LineChart, Sparkles, Users, Utensils } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ShareButton } from "@/components/share-button";
@@ -217,9 +217,8 @@ export default async function Home() {
       </Card>
 
       {/* Quick links */}
-      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <QuickLink href="/family" icon={<Users className="size-4" />} title="家庭档案" desc="5 名成员饮食处方" />
-        <QuickLink href="/reports" icon={<FileHeart className="size-4" />} title="体检报告" desc="AI 解析数字 / 扫描" />
+      <section className="grid gap-3 sm:grid-cols-3">
+        <QuickLink href="/family" icon={<Users className="size-4" />} title="家庭档案" desc="5 名成员处方 · 体检报告" />
         <QuickLink href="/trend" icon={<LineChart className="size-4" />} title="营养趋势" desc="近期 7 项指标" />
         <QuickLink href="/history" icon={<Clipboard className="size-4" />} title="历史菜单" desc="过往 50 周存档" />
       </section>

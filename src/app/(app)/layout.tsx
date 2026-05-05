@@ -6,7 +6,6 @@ const NAV = [
   { href: "/menu", label: "本周菜单" },
   { href: "/shopping", label: "采购清单" },
   { href: "/family", label: "家庭档案" },
-  { href: "/reports", label: "体检报告" },
   { href: "/trend", label: "营养趋势" },
   { href: "/history", label: "历史" },
 ];
