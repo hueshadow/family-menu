@@ -3,9 +3,33 @@
 import { useOptimistic, useTransition } from "react";
 import { Share2 } from "lucide-react";
 import { toast } from "sonner";
-import { Checkbox } from "@/components/ui/checkbox";
 import { toggleShoppingItemAction } from "@/app/actions";
 import { CATEGORY_LABELS, type ShoppingItem } from "@/lib/shared";
+
+// Native checkbox styled to match the rest of the app — base-ui's Checkbox
+// onCheckedChange wasn't firing in our setup, so we drop down to <input>.
+function CheckboxInput({
+  id,
+  checked,
+  onChange,
+  size = "md",
+}: {
+  id: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  size?: "sm" | "md";
+}) {
+  const px = size === "sm" ? "size-5" : "size-6";
+  return (
+    <input
+      id={id}
+      type="checkbox"
+      checked={checked}
+      onChange={(e) => onChange(e.target.checked)}
+      className={`${px} shrink-0 cursor-pointer accent-primary`}
+    />
+  );
+}
 
 const PLATFORMS: Array<{ label: string; build: (q: string) => string }> = [
   {
@@ -148,15 +172,14 @@ export function ShoppingList({
                 className="flex flex-col gap-2 rounded-md border p-3"
               >
                 <div className="flex items-center gap-3">
-                  <Checkbox
+                  <CheckboxInput
                     id={`item-${item.name}`}
                     checked={item.checked}
-                    onCheckedChange={(c) => onToggle(item.name, !!c)}
-                    className="size-6"
+                    onChange={(c) => onToggle(item.name, c)}
                   />
                   <label
                     htmlFor={`item-${item.name}`}
-                    className={`flex-1 text-base ${item.checked ? "line-through text-muted-foreground" : ""}`}
+                    className={`flex-1 cursor-pointer text-base ${item.checked ? "line-through text-muted-foreground" : ""}`}
                   >
                     {item.name}
                     {item.qty ? (
@@ -203,15 +226,15 @@ export function ShoppingList({
                 key={item.name}
                 className="flex items-center gap-3 rounded-md border border-border/40 bg-card/40 p-2.5"
               >
-                <Checkbox
+                <CheckboxInput
                   id={`pantry-${item.name}`}
                   checked={item.checked}
-                  onCheckedChange={(c) => onToggle(item.name, !!c)}
-                  className="size-5"
+                  onChange={(c) => onToggle(item.name, c)}
+                  size="sm"
                 />
                 <label
                   htmlFor={`pantry-${item.name}`}
-                  className={`flex-1 text-sm ${item.checked ? "line-through text-muted-foreground" : ""}`}
+                  className={`flex-1 cursor-pointer text-sm ${item.checked ? "line-through text-muted-foreground" : ""}`}
                 >
                   {item.name}
                 </label>
