@@ -3,7 +3,6 @@ import { join } from "node:path";
 import Link from "next/link";
 import { ArrowRight, ClipboardList, Sunrise, Utensils } from "lucide-react";
 import { DownloadCardImageButton } from "@/components/download-card-image-button";
-import { DownloadImageButton } from "@/components/download-image-button";
 // Smart day card: before 13:00 → today's menu (label "今日");
 // from 13:00 onward → tomorrow's menu (label "明日"). Rolls into next day at midnight.
 import { Badge } from "@/components/ui/badge";
@@ -228,7 +227,7 @@ export default async function Home() {
       </Card>
 
       {/* Week menu detail (kept here as a secondary block — full grid) */}
-      <Card className="border-border/70 bg-card">
+      <Card id="week-menu-card" className="border-border/70 bg-card">
         <CardHeader className="flex flex-row items-center justify-between border-b border-border/40">
           <CardTitle className="flex items-baseline gap-2">
             <Utensils className="size-4 text-primary" />
@@ -236,11 +235,12 @@ export default async function Home() {
               本周菜单 · {week.days[0].date.slice(5)}–{week.days[5].date.slice(5)}
             </span>
           </CardTitle>
-          <div className="flex items-center gap-2">
-            <DownloadImageButton
-              url={`/api/photo/menu-board/${week.week_start}`}
+          <div data-image-export-hidden className="flex items-center gap-2">
+            <DownloadCardImageButton
+              targetId="week-menu-card"
               filename={`${week.week_start}-本周菜单.png`}
               label="本周图片"
+              scale={2}
             />
             <Link
               href="/shopping"

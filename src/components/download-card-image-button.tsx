@@ -11,6 +11,7 @@ interface DownloadCardImageButtonProps {
 }
 
 const HIDDEN_EXPORT_SELECTOR = "[data-image-export-hidden]";
+const DOWNLOAD_FRAME_NAME = "card-image-download-frame";
 
 export function DownloadCardImageButton({
   targetId,
@@ -109,8 +110,10 @@ function submitDownloadForm(
   filename: string,
 ) {
   const form = document.createElement("form");
+  ensureDownloadFrame();
   form.method = "POST";
   form.action = "/api/photo/card";
+  form.target = DOWNLOAD_FRAME_NAME;
   form.style.display = "none";
 
   Object.entries({ ...data, filename }).forEach(([name, value]) => {
@@ -124,6 +127,19 @@ function submitDownloadForm(
   document.body.appendChild(form);
   form.submit();
   setTimeout(() => form.remove(), 1000);
+}
+
+function ensureDownloadFrame() {
+  const existing = document.querySelector<HTMLIFrameElement>(
+    `iframe[name="${DOWNLOAD_FRAME_NAME}"]`,
+  );
+  if (existing) return existing;
+
+  const iframe = document.createElement("iframe");
+  iframe.name = DOWNLOAD_FRAME_NAME;
+  iframe.style.display = "none";
+  document.body.appendChild(iframe);
+  return iframe;
 }
 
 function inlineComputedStyles(source: Element, clone: Element) {

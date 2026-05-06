@@ -1,6 +1,6 @@
 import { execFile } from "node:child_process";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
 
@@ -10,8 +10,8 @@ export const runtime = "nodejs";
 const execFilep = promisify(execFile);
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const EXPORT_ROOT = join(tmpdir(), "family-menu-card-export");
-const MAX_DIMENSION = 4096;
-const MAX_PIXELS = 16_000_000;
+const MAX_DIMENSION = 12_000;
+const MAX_PIXELS = 40_000_000;
 
 interface CardExportData {
   html: string;
@@ -55,6 +55,7 @@ export async function POST(req: Request) {
     );
 
     const buf = await readFile(pngPath);
+    await saveToDownloads(data.filename, buf);
     await rm(dir, { recursive: true, force: true });
     return new Response(new Uint8Array(buf), {
       status: 200,
@@ -159,6 +160,12 @@ function renderHtml(data: CardExportData) {
 async function mkExportDir() {
   await mkdir(EXPORT_ROOT, { recursive: true });
   return join(EXPORT_ROOT, `${Date.now()}-${Math.random().toString(36).slice(2)}`);
+}
+
+async function saveToDownloads(filename: string, buf: Buffer) {
+  const downloadsDir = join(homedir(), "Downloads");
+  await mkdir(downloadsDir, { recursive: true });
+  await writeFile(join(downloadsDir, filename), buf);
 }
 
 function safeFilename(filename: string) {
