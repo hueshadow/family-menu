@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { BarChart3, Loader2, Sparkles, Wand2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -65,6 +66,20 @@ export function MenuEditor({
   const [analysis, setAnalysis] = useState<NutritionAnalysis | null>(null);
   const [pendingAnalysis, startAnalysis] = useTransition();
 
+  const router = useRouter();
+  const refreshTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  useEffect(() => {
+    return () => {
+      if (refreshTimerRef.current) clearInterval(refreshTimerRef.current);
+    };
+  }, []);
+
+  // If parent re-renders with fresh initialDays (e.g. after router.refresh
+  // catches up the server-fetched menu), pull that into local state.
+  useEffect(() => {
+    setDays(initialDays);
+  }, [initialDays]);
+
   const update = (
     di: number,
     dishi: number,
@@ -98,13 +113,38 @@ export function MenuEditor({
       return;
     }
     setError(null);
+
+    // Belt-and-suspenders fallback: if the long-running action's response
+    // never reaches the client (CF tunnel sometimes drops the long-poll),
+    // we still want the menu to refresh. Poll the route on a timer; the
+    // first refresh that produces dishes wins.
+    if (refreshTimerRef.current) clearInterval(refreshTimerRef.current);
+    refreshTimerRef.current = setInterval(() => {
+      router.refresh();
+    }, 30_000);
+
     startGenerate(async () => {
-      const res = await generateWeekAction(weekId, weekStart);
-      if (res.ok) {
-        setDays(res.days);
-        setSaved(new Date().toLocaleTimeString("zh-CN"));
-      } else {
-        setError(res.error);
+      try {
+        const res = await generateWeekAction(weekId, weekStart);
+        if (res.ok) {
+          setDays(res.days);
+          setSaved(new Date().toLocaleTimeString("zh-CN"));
+          router.refresh();
+        } else {
+          setError(res.error);
+        }
+      } catch (e) {
+        setError(
+          e instanceof Error
+            ? `${e.message} — 服务端可能已生成，刷新页面看最新菜单`
+            : String(e),
+        );
+        router.refresh();
+      } finally {
+        if (refreshTimerRef.current) {
+          clearInterval(refreshTimerRef.current);
+          refreshTimerRef.current = null;
+        }
       }
     });
   };
