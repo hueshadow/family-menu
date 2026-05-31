@@ -1,13 +1,11 @@
 import "server-only";
-import { mkdir, writeFile } from "node:fs/promises";
-import { homedir } from "node:os";
-import { join } from "node:path";
+import { uploadToR2 } from "@/lib/r2";
 import type { DayInput } from "@/lib/shared";
 
 const PARALLEL = 5;
-const DEST = join(homedir(), "Documents/family-menu-data/dish-images");
+const DISH_PHOTOS_PREFIX = "dish-images";
 
-export const DISH_PHOTOS_DIR = DEST;
+export { DISH_PHOTOS_PREFIX };
 
 interface Dish {
   dayIdx: number;
@@ -28,7 +26,7 @@ NO text, NO chopsticks visible, NO watermark.`;
 async function genOne(
   d: Dish,
   model: string,
-): Promise<{ ok: true; path: string; ms: number } | { ok: false; reason: string }> {
+): Promise<{ ok: true; url: string; ms: number } | { ok: false; reason: string }> {
   const baseURL = process.env.AI_BASE_URL;
   const apiKey = process.env.AI_API_KEY;
   if (!baseURL || !apiKey) return { ok: false, reason: "AI env missing" };
@@ -67,9 +65,9 @@ async function genOne(
     } else {
       return { ok: false, reason: "no image data" };
     }
-    const path = join(DEST, d.filename);
-    await writeFile(path, buf);
-    return { ok: true, path, ms: Date.now() - t0 };
+    const key = `${DISH_PHOTOS_PREFIX}/${d.filename}`;
+    const url = await uploadToR2(key, buf, "image/png");
+    return { ok: true, url, ms: Date.now() - t0 };
   } catch (e) {
     return { ok: false, reason: e instanceof Error ? e.message : String(e) };
   }
@@ -80,7 +78,6 @@ export async function generateDishPhotosForWeek(opts: {
   model?: string;
   onProgress?: (msg: string) => void;
 }): Promise<{ ok: number; failed: number; total: number }> {
-  await mkdir(DEST, { recursive: true });
   const model = opts.model ?? process.env.AI_MODEL_IMAGE ?? "gpt-image-2";
   const onProgress = opts.onProgress ?? (() => {});
 

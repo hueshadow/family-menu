@@ -6,6 +6,8 @@
     "dev": "next dev",
     "dev:lan": "next dev -H 0.0.0.0",
     "build": "next build",
+    "build:cf": "npx opennextjs-cloudflare && node scripts/wrap-with-cron.mjs",
+    "deploy": "npm run build:cf && wrangler deploy",
     "start": "next start",
     "start:lan": "next start -H 0.0.0.0",
     "ip": "node -e \"const o=require('os').networkInterfaces();for(const k in o)for(const i of o[k])if(i.family==='IPv4'&&!i.internal)console.log(' http://'+i.address+':3000  ('+k+')')\"",
