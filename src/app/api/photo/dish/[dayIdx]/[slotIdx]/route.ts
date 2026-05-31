@@ -1,6 +1,4 @@
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
-import { DISH_PHOTOS_DIR } from "@/lib/dish-photos";
+import { getFromR2 } from "@/lib/r2";
 
 export const dynamic = "force-dynamic";
 
@@ -13,17 +11,15 @@ export async function GET(
     return new Response("invalid params", { status: 400 });
   }
 
-  const path = join(DISH_PHOTOS_DIR, `d${dayIdx}-s${slotIdx}.png`);
-  try {
-    const buf = await readFile(path);
-    return new Response(new Uint8Array(buf), {
-      status: 200,
-      headers: {
-        "Content-Type": "image/png",
-        "Cache-Control": "public, max-age=86400",
-      },
-    });
-  } catch {
-    return new Response("not found", { status: 404 });
-  }
+  const key = `dish-images/d${dayIdx}-s${slotIdx}.png`;
+  const obj = await getFromR2(key);
+  if (!obj) return new Response("not found", { status: 404 });
+
+  return new Response(obj.body, {
+    status: 200,
+    headers: {
+      "Content-Type": obj.httpMetadata?.contentType ?? "image/png",
+      "Cache-Control": "public, max-age=86400",
+    },
+  });
 }

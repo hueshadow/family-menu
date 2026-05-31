@@ -1,11 +1,9 @@
 import "server-only";
-import { mkdir, writeFile } from "node:fs/promises";
-import { homedir } from "node:os";
-import { join } from "node:path";
+import { uploadToR2 } from "@/lib/r2";
 import type { DayInput } from "@/lib/shared";
 
 const PARALLEL = 3;
-const DEST = join(homedir(), "Documents/family-menu-data/table-photos");
+const TABLE_PHOTOS_PREFIX = "table-photos";
 
 interface Day {
   date: string;
@@ -34,7 +32,7 @@ async function genOne(
   day: Day,
   model: string,
 ): Promise<
-  | { ok: true; path: string; ms: number }
+  | { ok: true; url: string; ms: number }
   | { ok: false; reason: string }
 > {
   const baseURL = process.env.AI_BASE_URL;
@@ -79,9 +77,9 @@ async function genOne(
     } else {
       return { ok: false, reason: "no image data" };
     }
-    const path = join(DEST, `${day.date}.png`);
-    await writeFile(path, buf);
-    return { ok: true, path, ms: Date.now() - t0 };
+    const key = `${TABLE_PHOTOS_PREFIX}/${day.date}.png`;
+    const url = await uploadToR2(key, buf, "image/png");
+    return { ok: true, url, ms: Date.now() - t0 };
   } catch (e) {
     return { ok: false, reason: e instanceof Error ? e.message : String(e) };
   }
@@ -92,7 +90,6 @@ export async function generateWeekTablePhotos(opts: {
   model?: string;
   onProgress?: (msg: string) => void;
 }): Promise<{ ok: number; failed: number; total: number }> {
-  await mkdir(DEST, { recursive: true });
   const model = opts.model ?? process.env.AI_MODEL_IMAGE ?? "gpt-image-2";
   const onProgress = opts.onProgress ?? (() => {});
 
@@ -125,4 +122,4 @@ export async function generateWeekTablePhotos(opts: {
   return { ok: okCount, failed: failedCount, total: days.length };
 }
 
-export const TABLE_PHOTOS_DIR = DEST;
+export { TABLE_PHOTOS_PREFIX };

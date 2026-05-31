@@ -1,28 +1,16 @@
 "use server";
 
-import { readdir, stat } from "node:fs/promises";
-import { join } from "node:path";
 import { revalidatePath } from "next/cache";
-import { runImagePipeline } from "@/lib/auto-gen";
 import {
   aggregateAndStoreShoppingList,
-  getAllReports,
   getLatestDietaryProfiles,
   getMembers,
   getRecentWeeksMenu,
-  getReportsByMember,
-  insertHealthReport,
   query,
   saveWeek,
   saveWeekAnalysis,
   setShoppingItemChecked,
-  upsertDietaryProfile,
 } from "@/lib/db";
-import {
-  deriveDietaryProfile,
-  parseHealthReportFromFile,
-  type HealthReportParsed,
-} from "@/lib/health";
 import {
   analyzeWeekNutrition,
   generateRecipe,
@@ -32,9 +20,14 @@ import {
   type NutritionAnalysis,
   type Substitutes,
 } from "@/lib/menu-gen";
-import { getPdfPageCount } from "@/lib/pdf";
 import { type DayInput, type MemberRole } from "@/lib/shared";
 import { DISH_SLOTS } from "@/lib/shared";
+
+// =========================================================================
+// NOTE: Health report processing (listReportFilesAction / processReportAction)
+// depends on pdftotext/pdftoppm binaries + local filesystem — unavailable on
+// Cloudflare Workers. These features are deferred pending a separate service.
+// =========================================================================
 
 export async function saveWeekAction(
   weekId: string,
@@ -43,9 +36,7 @@ export async function saveWeekAction(
 ) {
   await saveWeek(weekId, days);
   await aggregateAndStoreShoppingList(weekId, days);
-  void runImagePipeline(new Date(weekStart), days).catch((e) => {
-    console.error("[saveWeekAction] image pipeline failed:", e);
-  });
+  // Image generation moved to Cloudflare Workflow — triggered via /api/generate
   revalidatePath("/");
   revalidatePath("/menu");
   revalidatePath("/shopping");
@@ -101,9 +92,7 @@ export async function generateWeekAction(
     });
     await saveWeek(weekId, days);
     await aggregateAndStoreShoppingList(weekId, days);
-    void runImagePipeline(startDate, days).catch((e) => {
-      console.error("[generateWeekAction] image pipeline failed:", e);
-    });
+    // Image generation moved to Cloudflare Workflow — triggered via /api/generate
     revalidatePath("/");
     revalidatePath("/menu");
     revalidatePath("/shopping");
@@ -251,7 +240,10 @@ export async function listWeeksAction(): Promise<
 }
 
 // ========== Health reports ==========
+// DISABLED on Workers: pdftotext/pdftoppm binaries + local filesystem unavailable.
+// These features are deferred pending a separate service deployment.
 
+// Keep the interface for type compatibility with existing UI components
 export interface ReportFileSummary {
   filename: string;
   size: number;
@@ -260,108 +252,19 @@ export interface ReportFileSummary {
   alreadyProcessed: boolean;
 }
 
-const ROLE_KEYWORDS: Array<[MemberRole, string[]]> = [
-  ["yeye", ["爷爷"]],
-  ["nainai", ["奶奶"]],
-  ["mama", ["妈妈"]],
-  ["baba", ["爸爸"]],
-  ["baby", ["宝宝", "婴儿", "幼儿"]],
-];
-
-function guessRoleFromName(filename: string): MemberRole | null {
-  for (const [role, keys] of ROLE_KEYWORDS) {
-    if (keys.some((k) => filename.includes(k))) return role;
-  }
-  return null;
-}
-
 export async function listReportFilesAction(): Promise<ReportFileSummary[]> {
-  const dir = process.env.HEALTH_REPORTS_DIR;
-  if (!dir) return [];
-  let names: string[];
-  try {
-    names = await readdir(dir);
-  } catch {
-    return [];
-  }
-  const pdfs = names.filter((n) => n.toLowerCase().endsWith(".pdf"));
-  const allReports = await getAllReports();
-  const processedPaths = new Set(allReports.map((r) => r.storage_path));
-  const result: ReportFileSummary[] = [];
-  for (const f of pdfs) {
-    const fp = join(dir, f);
-    const s = await stat(fp);
-    const pages = await getPdfPageCount(fp).catch(() => 0);
-    result.push({
-      filename: f,
-      size: s.size,
-      pages,
-      guessedRole: guessRoleFromName(f),
-      alreadyProcessed: processedPaths.has(fp),
-    });
-  }
-  return result;
+  console.warn("[actions] Health report file scanning not available on Workers");
+  return [];
 }
 
-export async function processReportAction(opts: {
+export async function processReportAction(_opts: {
   memberId: string;
   filename: string;
 }): Promise<
   | { ok: true; abnormalCount: number; ocrUsed: boolean; profileTags: string[] }
   | { ok: false; error: string }
 > {
-  try {
-    const dir = process.env.HEALTH_REPORTS_DIR;
-    if (!dir) throw new Error("HEALTH_REPORTS_DIR not set");
-    const filepath = join(dir, opts.filename);
-    const members = await getMembers();
-    const member = members.find((m) => m.id === opts.memberId);
-    if (!member) throw new Error("member not found");
-
-    const { extractPdfText } = await import("@/lib/pdf");
-    const probeText = await extractPdfText(filepath);
-    const ocrUsed = probeText === null;
-
-    const parsed = await parseHealthReportFromFile(filepath, {
-      name: member.name,
-      age: member.age,
-    });
-    await insertHealthReport({
-      memberId: opts.memberId,
-      year: parsed.reportYear ?? null,
-      storagePath: filepath,
-      ocrUsed,
-      parsed: parsed as unknown as Record<string, unknown>,
-    });
-
-    // Re-derive dietary profile from ALL reports for this member
-    const reportRows = await getReportsByMember(opts.memberId);
-    const allParsed: HealthReportParsed[] = reportRows
-      .map((r) => r.parsed as unknown as HealthReportParsed)
-      .filter(Boolean);
-    const profile = await deriveDietaryProfile({
-      member,
-      reports: allParsed,
-    });
-    await upsertDietaryProfile({
-      memberId: opts.memberId,
-      tags: profile.tags,
-      recommend: profile.recommend,
-      avoid: profile.avoid,
-      rationale: profile.rationale ?? null,
-    });
-
-    revalidatePath("/reports");
-    revalidatePath("/family");
-    return {
-      ok: true,
-      abnormalCount: parsed.abnormal_summary.length,
-      ocrUsed,
-      profileTags: profile.tags,
-    };
-  } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : String(e) };
-  }
+  return { ok: false, error: "Health report processing not available on Workers. PDF extraction requires pdftotext/pdftoppm binaries (poppler). This feature is deferred." };
 }
 
 export async function generateRecipeAction(

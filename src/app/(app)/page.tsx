@@ -1,5 +1,3 @@
-import { access } from "node:fs/promises";
-import { join } from "node:path";
 import Link from "next/link";
 import { ArrowRight, ClipboardList, Sunrise, Utensils } from "lucide-react";
 import { DownloadCardImageButton } from "@/components/download-card-image-button";
@@ -8,10 +6,8 @@ import { DownloadCardImageButton } from "@/components/download-card-image-button
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getOrCreateWeek, isoDate, mondayOf } from "@/lib/db";
-import { DISH_PHOTOS_DIR } from "@/lib/dish-photos";
 import { describeSeasonal } from "@/lib/seasonal";
 import { DISH_ICONS, WEEKDAYS } from "@/lib/shared";
-import { TABLE_PHOTOS_DIR } from "@/lib/table-photo";
 
 export const dynamic = "force-dynamic";
 
@@ -39,44 +35,8 @@ export default async function Home() {
     weekday: "long",
   });
   const targetTitle = showTomorrow ? "明日" : "今日";
-  let hasTargetTablePhoto = false;
-  if (target) {
-    try {
-      await access(join(TABLE_PHOTOS_DIR, `${targetIso}.png`));
-      hasTargetTablePhoto = true;
-    } catch {
-      hasTargetTablePhoto = false;
-    }
-  }
-  const targetDishPhotos = target
-    ? await Promise.all(
-        target.dishes.map(async (_dish, dishIdx) => {
-          try {
-            await access(
-              join(DISH_PHOTOS_DIR, `d${targetDayIdx + 1}-s${dishIdx}.png`),
-            );
-            return true;
-          } catch {
-            return false;
-          }
-        }),
-      )
-    : [];
-
-  const weekDishPhotos = await Promise.all(
-    week.days.map(async (day, dayIdx) =>
-      Promise.all(
-        day.dishes.map(async (_dish, dishIdx) => {
-          try {
-            await access(join(DISH_PHOTOS_DIR, `d${dayIdx + 1}-s${dishIdx}.png`));
-            return true;
-          } catch {
-            return false;
-          }
-        }),
-      ),
-    ),
-  );
+  // Images served via /api/photo/* (R2-backed). Missing images
+  // return 404 — the browser handles the fallback naturally.
 
   const filledDays = week.days.filter((d) =>
     d.dishes.some((x) => x.name.trim()),
@@ -155,16 +115,14 @@ export default async function Home() {
           </CardContent>
         ) : (
           <>
-            {hasTargetTablePhoto ? (
-              <Link href="/menu" className="block px-6 pt-4">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`/api/photo/table/${targetIso}`}
-                  alt={`${targetTitle}餐桌：${target.dishes.map((d) => d.name).filter(Boolean).join("、")}`}
-                  className="aspect-[3/2] w-full rounded-md object-cover transition hover:opacity-95"
-                />
-              </Link>
-            ) : null}
+            <Link href="/menu" className="block px-6 pt-4">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`/api/photo/table/${targetIso}`}
+                alt={`${targetTitle}餐桌：${target.dishes.map((d) => d.name).filter(Boolean).join("、")}`}
+                className="aspect-[3/2] w-full rounded-md object-cover transition hover:opacity-95"
+              />
+            </Link>
             <CardContent className="space-y-3 pt-4">
               <p className="text-xs leading-relaxed text-muted-foreground">
                 {targetTitle}{" "}
@@ -178,25 +136,21 @@ export default async function Home() {
                 {target.dishes.map((dish, i) => {
                   const dishName = dish.name.trim();
                   if (!dishName) return null;
-                  const hasPhoto = targetDishPhotos[i];
                   return (
                     <div
                       key={i}
                       className="flex gap-3 overflow-hidden rounded-md border border-border/50 bg-muted/15 p-2"
                     >
-                      <div className="size-16 shrink-0 overflow-hidden rounded-md bg-muted">
-                        {hasPhoto ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={`/api/photo/dish/${targetDayIdx + 1}/${i}`}
-                            alt={dishName}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center text-xl text-muted-foreground/70">
-                            {DISH_ICONS[i]}
-                          </div>
-                        )}
+                      <div className="relative size-16 shrink-0 overflow-hidden rounded-md bg-muted">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={`/api/photo/dish/${targetDayIdx + 1}/${i}`}
+                          alt={dishName}
+                          className="absolute inset-0 h-full w-full object-cover"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center text-xl text-muted-foreground/70 -z-10">
+                          {DISH_ICONS[i]}
+                        </div>
                       </div>
                       <div className="min-w-0 flex-1 text-xs">
                         <p className="text-sm font-medium leading-snug text-foreground">
@@ -271,8 +225,7 @@ export default async function Home() {
                   <span className="text-xs text-muted-foreground">{dishes.length} 道菜</span>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-                  {day.dishes.map((dish, dishIdx) => {
-                    const hasDishPhoto = weekDishPhotos[dayIdx][dishIdx];
+                   {day.dishes.map((dish, dishIdx) => {
                     const dishName = dish.name.trim();
 
                     return (
@@ -281,20 +234,17 @@ export default async function Home() {
                         className="overflow-hidden rounded-lg border border-border/60 bg-muted/20"
                       >
                         {dishName ? (
-                          hasDishPhoto ? (
-                            <div className="px-3 pt-3">
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img
-                                src={`/api/photo/dish/${dayIdx + 1}/${dishIdx}`}
-                                alt={dishName}
-                                className="aspect-[4/3] w-full rounded-md object-cover"
-                              />
-                            </div>
-                          ) : (
-                            <div className="flex aspect-[4/3] items-center justify-center bg-muted text-3xl text-muted-foreground/70">
+                          <div className="relative px-3 pt-3">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={`/api/photo/dish/${dayIdx + 1}/${dishIdx}`}
+                              alt={dishName}
+                              className="relative z-10 aspect-[4/3] w-full rounded-md object-cover"
+                            />
+                            <div className="absolute inset-3 flex items-center justify-center text-3xl text-muted-foreground/70 -z-0">
                               {DISH_ICONS[dishIdx]}
                             </div>
-                          )
+                          </div>
                         ) : (
                           <div className="flex aspect-[4/3] items-center justify-center bg-muted text-xs text-muted-foreground">
                             待补充

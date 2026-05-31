@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { BarChart3, Loader2, Sparkles, Wand2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -67,12 +67,6 @@ export function MenuEditor({
   const [pendingAnalysis, startAnalysis] = useTransition();
 
   const router = useRouter();
-  const refreshTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  useEffect(() => {
-    return () => {
-      if (refreshTimerRef.current) clearInterval(refreshTimerRef.current);
-    };
-  }, []);
 
   // If parent re-renders with fresh initialDays (e.g. after router.refresh
   // catches up the server-fetched menu), pull that into local state.
@@ -113,38 +107,62 @@ export function MenuEditor({
       return;
     }
     setError(null);
-
-    // Belt-and-suspenders fallback: if the long-running action's response
-    // never reaches the client (CF tunnel sometimes drops the long-poll),
-    // we still want the menu to refresh. Poll the route on a timer; the
-    // first refresh that produces dishes wins.
-    if (refreshTimerRef.current) clearInterval(refreshTimerRef.current);
-    refreshTimerRef.current = setInterval(() => {
-      router.refresh();
-    }, 30_000);
+    setSaved(null);
 
     startGenerate(async () => {
       try {
-        const res = await generateWeekAction(weekId, weekStart);
-        if (res.ok) {
-          setDays(res.days);
-          setSaved(new Date().toLocaleTimeString("zh-CN"));
-          router.refresh();
-        } else {
-          setError(res.error);
+        // Step 1: Trigger the Workflow
+        const triggerRes = await fetch("/api/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ weekStart }),
+        });
+        const triggerData = (await triggerRes.json()) as {
+          id?: string;
+          error?: string;
+        };
+        if (!triggerRes.ok || triggerData.error) {
+          setError(triggerData.error ?? "Failed to start generation");
+          return;
         }
+
+        const instanceId = triggerData.id;
+        const pollInterval = 5_000; // 5s
+        const maxPolls = 120; // 10 minutes max
+        let polls = 0;
+
+        // Step 2: Poll for completion
+        while (polls < maxPolls) {
+          await new Promise((r) => setTimeout(r, pollInterval));
+          polls++;
+
+          const statusRes = await fetch(`/api/generate/${instanceId}`);
+          const statusData = (await statusRes.json()) as {
+            status?: string;
+            error?: string;
+          };
+
+          if (statusData.status === "completed") {
+            router.refresh();
+            // After refresh, the parent re-renders with fresh server data
+            setSaved(new Date().toLocaleTimeString("zh-CN"));
+            return;
+          }
+          if (statusData.status === "failed") {
+            setError(statusData.error ?? "生成失败，请重试");
+            return;
+          }
+          // Still running — continue polling
+        }
+        setError("生成超时（超过 10 分钟），请刷新页面查看结果");
+        router.refresh();
       } catch (e) {
         setError(
           e instanceof Error
-            ? `${e.message} — 服务端可能已生成，刷新页面看最新菜单`
+            ? `${e.message} — 刷新页面看最新菜单`
             : String(e),
         );
         router.refresh();
-      } finally {
-        if (refreshTimerRef.current) {
-          clearInterval(refreshTimerRef.current);
-          refreshTimerRef.current = null;
-        }
       }
     });
   };
