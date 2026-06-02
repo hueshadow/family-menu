@@ -50,6 +50,35 @@ export async function r2Exists(key: string): Promise<boolean> {
 /** 获取 R2 对象，不存在返回 null */
 export async function getFromR2(key: string): Promise<R2ObjectBody | null> {
   const bucket = await getBucket();
-  if (!bucket) return null;
+  if (!bucket) return getFromLocalFs(key);
   return bucket.get(key);
+}
+
+/**
+ * 本地降级：非 Cloudflare 运行时（next dev / next start）没有 R2 binding，
+ * 改从仓库内的 family-menu-data/<key> 读取。R2 key 与本地目录结构一致
+ * （dish-images/、table-photos/、day-boards/、menu-boards/），所以一处兜底即可。
+ * node:fs 用动态 import，避免进入 Workers 打包图。
+ */
+async function getFromLocalFs(key: string): Promise<R2ObjectBody | null> {
+  try {
+    const { readFile } = await import("node:fs/promises");
+    const { join, normalize } = await import("node:path");
+    const base = join(process.cwd(), "family-menu-data");
+    const path = normalize(join(base, key));
+    // 防目录穿越：解析后必须仍在 base 内
+    if (!path.startsWith(base)) return null;
+    const buf = await readFile(path);
+    const contentType = key.endsWith(".png")
+      ? "image/png"
+      : key.endsWith(".jpg") || key.endsWith(".jpeg")
+        ? "image/jpeg"
+        : "application/octet-stream";
+    return {
+      body: new Uint8Array(buf),
+      httpMetadata: { contentType },
+    } as unknown as R2ObjectBody;
+  } catch {
+    return null;
+  }
 }
