@@ -157,3 +157,34 @@
       radial-gradient(at 85% 100%, rgba(90, 122, 74, 0.12) 0, transparent 50%);
   }
 }
+
+/* Printing — strip the warm theme to plain black-on-white and turn checkboxes
+ * into crisp empty squares people can tick by hand at the market. */
+@media print {
+  @page {
+    margin: 1.5cm;
+  }
+  body {
+    background: #fff !important;
+    background-image: none !important;
+    color: #000 !important;
+  }
+  input[type="checkbox"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid #000 !important;
+    border-radius: 2px;
+    position: relative;
+    vertical-align: middle;
+  }
+  input[type="checkbox"]:checked::after {
+    content: "✓";
+    position: absolute;
+    inset: 0;
+    text-align: center;
+    line-height: 13px;
+    font-size: 13px;
+  }
+}

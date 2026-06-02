@@ -1,7 +1,7 @@
 "use client";
 
 import { useOptimistic, useTransition } from "react";
-import { Share2 } from "lucide-react";
+import { Printer, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { toggleShoppingItemAction } from "@/app/actions";
 import { CATEGORY_LABELS, type ShoppingItem } from "@/lib/shared";
@@ -31,29 +31,14 @@ function CheckboxInput({
   );
 }
 
-const PLATFORMS: Array<{ label: string; build: (q: string) => string }> = [
-  {
-    label: "盒马",
-    build: (q) => `https://www.freshhema.com/search?q=${encodeURIComponent(q)}`,
-  },
-  {
-    label: "京东",
-    build: (q) =>
-      `https://search.jd.com/Search?keyword=${encodeURIComponent(q)}`,
-  },
-  {
-    label: "美团",
-    build: (q) =>
-      `https://maicai.meituan.com/search/${encodeURIComponent(q)}`,
-  },
-];
-
 export function ShoppingList({
   listId,
   items,
+  weekLabel,
 }: {
   listId: string;
   items: ShoppingItem[];
+  weekLabel?: string;
 }) {
   const [optimisticItems, setOptimisticItems] = useOptimistic(
     items,
@@ -128,9 +113,17 @@ export function ShoppingList({
     }
   };
 
+  const onPrint = () => window.print();
+
   return (
     <div className="space-y-5">
-      <div className="rounded-md border p-4">
+      {/* Print-only header — the on-screen intro box and progress card are hidden on paper. */}
+      <div className="hidden print:block">
+        <h1 className="text-xl font-semibold">本周采购清单</h1>
+        {weekLabel ? <p className="mt-0.5 text-sm">{weekLabel}</p> : null}
+      </div>
+
+      <div className="rounded-md border p-4 print:hidden">
         <div className="flex items-baseline justify-between">
           <p className="text-base text-muted-foreground">本周进度</p>
           <p className="text-lg font-medium">
@@ -154,6 +147,14 @@ export function ShoppingList({
           </button>
           <button
             type="button"
+            onClick={onPrint}
+            className="inline-flex items-center gap-1.5 rounded-md border border-border/60 bg-card px-3 py-1.5 text-xs text-muted-foreground transition hover:border-primary/50 hover:bg-primary/5 hover:text-primary"
+          >
+            <Printer className="size-3.5" />
+            打印清单
+          </button>
+          <button
+            type="button"
             onClick={onCopyAll}
             className="text-sm text-muted-foreground underline-offset-2 hover:underline"
           >
@@ -163,47 +164,31 @@ export function ShoppingList({
       </div>
 
       {[...grouped.entries()].map(([cat, arr]) => (
-        <section key={cat} className="space-y-2">
-          <h4 className="text-lg font-semibold">{CATEGORY_LABELS[cat] ?? cat}</h4>
-          <ul className="space-y-2">
+        <section key={cat} className="space-y-1.5">
+          <h4 className="text-base font-semibold print:break-after-avoid">{CATEGORY_LABELS[cat] ?? cat}</h4>
+          <ul className="divide-y rounded-md border">
             {arr.map((item) => (
               <li
                 key={item.name}
-                className="flex flex-col gap-2 rounded-md border p-3"
+                className="flex items-center gap-3 px-3 py-2 print:break-inside-avoid"
               >
-                <div className="flex items-center gap-3">
-                  <CheckboxInput
-                    id={`item-${item.name}`}
-                    checked={item.checked}
-                    onChange={(c) => onToggle(item.name, c)}
-                  />
-                  <label
-                    htmlFor={`item-${item.name}`}
-                    className={`flex-1 cursor-pointer text-base ${item.checked ? "line-through text-muted-foreground" : ""}`}
-                  >
-                    {item.name}
-                    {item.qty ? (
-                      <span className="ml-2 text-sm text-muted-foreground">
-                        {item.qty}
-                      </span>
-                    ) : null}
-                  </label>
-                </div>
-                {!item.checked ? (
-                  <div className="flex flex-wrap gap-2 pl-9 text-xs">
-                    {PLATFORMS.map((p) => (
-                      <a
-                        key={p.label}
-                        href={p.build(item.name)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="rounded border px-2 py-0.5 text-muted-foreground hover:border-foreground/40 hover:text-foreground"
-                      >
-                        🔍 {p.label}
-                      </a>
-                    ))}
-                  </div>
-                ) : null}
+                <CheckboxInput
+                  id={`item-${item.name}`}
+                  checked={item.checked}
+                  onChange={(c) => onToggle(item.name, c)}
+                  size="sm"
+                />
+                <label
+                  htmlFor={`item-${item.name}`}
+                  className={`flex-1 cursor-pointer text-base ${item.checked ? "line-through text-muted-foreground" : ""}`}
+                >
+                  {item.name}
+                  {item.qty ? (
+                    <span className="ml-2 text-sm text-muted-foreground">
+                      {item.qty}
+                    </span>
+                  ) : null}
+                </label>
               </li>
             ))}
           </ul>
@@ -211,7 +196,7 @@ export function ShoppingList({
       ))}
 
       {pantryItems.length > 0 ? (
-        <section className="space-y-2 rounded-md border border-dashed border-border/60 bg-muted/20 p-4">
+        <section className="space-y-2 rounded-md border border-dashed border-border/60 bg-muted/20 p-4 print:break-inside-avoid">
           <div>
             <h4 className="text-lg font-semibold">
               {CATEGORY_LABELS.seasoning ?? "🧂 调味品 · 确认家中库存"}

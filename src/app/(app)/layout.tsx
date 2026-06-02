@@ -11,7 +11,7 @@ const NAV = [
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="mx-auto flex min-h-dvh max-w-5xl flex-col">
-      <header className="border-b border-border/60 bg-card/40 backdrop-blur">
+      <header className="border-b border-border/60 bg-card/40 backdrop-blur print:hidden">
         <div className="flex items-center justify-between gap-4 px-6 py-4">
           <Link
             href="/"
