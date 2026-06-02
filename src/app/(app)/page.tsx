@@ -144,7 +144,7 @@ export default async function Home() {
                       <div className="relative size-16 shrink-0 overflow-hidden rounded-md bg-muted">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                          src={`/api/photo/dish/${targetDayIdx + 1}/${i}`}
+                          src={`/api/photo/dish/${targetDayIdx + 1}/${i}?v=${week.week_start}`}
                           alt={dishName}
                           className="absolute inset-0 h-full w-full object-cover"
                         />
@@ -237,7 +237,7 @@ export default async function Home() {
                           <div className="relative px-3 pt-3">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
-                              src={`/api/photo/dish/${dayIdx + 1}/${dishIdx}`}
+                              src={`/api/photo/dish/${dayIdx + 1}/${dishIdx}?v=${week.week_start}`}
                               alt={dishName}
                               className="relative z-10 aspect-[4/3] w-full rounded-md object-cover"
                             />
