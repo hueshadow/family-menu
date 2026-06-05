@@ -1,8 +1,8 @@
 // Generate 30 individual food-photography images, one per dish.
-// Saves to ~/Documents/family-menu-data/dish-images/{day}-{slot}-{slug}.png
+// Saves to ./family-menu-data/dish-images/{day}-{slot}.png (cwd-relative,
+// matching the photo route's local fallback and gen-table-photos.mjs).
 
 import { mkdir, writeFile } from "node:fs/promises";
-import { homedir } from "node:os";
 import { join } from "node:path";
 import pg from "pg";
 
@@ -11,7 +11,7 @@ const apiKey = process.env.AI_API_KEY;
 const MODEL = process.argv[2] || "gpt-image-2";
 const PARALLEL = 5;
 
-const DEST = join(homedir(), "Documents/family-menu-data/dish-images");
+const DEST = join(process.cwd(), "family-menu-data/dish-images");
 await mkdir(DEST, { recursive: true });
 
 // Pull current week's menu
