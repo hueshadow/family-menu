@@ -2,7 +2,6 @@
 // Usage: node --env-file=.env.local scripts/gen-table-photos.mjs
 
 import { mkdir, writeFile } from "node:fs/promises";
-import { homedir } from "node:os";
 import { join } from "node:path";
 import pg from "pg";
 
@@ -10,7 +9,8 @@ const baseURL = process.env.AI_BASE_URL;
 const apiKey = process.env.AI_API_KEY;
 const MODEL = process.argv[2] || "gpt-image-2";
 const PARALLEL = 3;
-const DEST = join(homedir(), "Documents/family-menu-data/table-photos");
+// cwd-relative, matching gen-dish-photos.mjs and the photo route's local fallback.
+const DEST = join(process.cwd(), "family-menu-data/table-photos");
 await mkdir(DEST, { recursive: true });
 
 const c = new pg.Client({
