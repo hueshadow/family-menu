@@ -3,7 +3,8 @@
 export const DISH_SLOTS = ["主荤", "副荤", "蔬菜", "凉菜", "汤"] as const;
 export const DISH_ICONS = ["🍖", "🍳", "🥬", "🥗", "🍲"] as const;
 export const DISHES_PER_DAY = DISH_SLOTS.length;
-export const WEEKDAYS = ["周一", "周二", "周三", "周四", "周五", "周六"] as const;
+// Cooking days: Mon–Fri + Sun (Saturday rests). Index 5 = Sunday, matching DAY_OFFSETS in db.ts.
+export const WEEKDAYS = ["周一", "周二", "周三", "周四", "周五", "周日"] as const;
 
 export type MemberRole = "yeye" | "nainai" | "baba" | "mama" | "baby";
 

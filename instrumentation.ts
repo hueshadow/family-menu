@@ -1,8 +1,15 @@
 // =========================================================================
-// 定时任务已迁至 Cloudflare Cron Triggers + Workflows。
-// 进程内 scheduler (setInterval) 已废弃，不再在 Node.js 进程里调度。
-// workers 上此文件不注册任何 long-running side effects。
+// 在长驻 Node.js 进程（next start / next dev）里启动进程内调度器。
+// Cloudflare Workers 运行时（NEXT_RUNTIME !== "nodejs"）下保持禁用——
+// 那里由 Cron Triggers + Workflows 调度，避免双重生成。
 // =========================================================================
 export async function register(): Promise<void> {
-  console.log("[instrumentation] scheduler disabled — using Cloudflare Cron Triggers + Workflows");
+  if (process.env.NEXT_RUNTIME !== "nodejs") {
+    console.log(
+      "[instrumentation] non-node runtime — scheduler disabled (Cloudflare Cron owns scheduling)",
+    );
+    return;
+  }
+  const { startScheduler } = await import("@/lib/scheduler");
+  startScheduler();
 }

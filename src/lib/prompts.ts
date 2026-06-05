@@ -80,7 +80,7 @@ export function buildWeekPrompt(opts: {
 ${describeFamily(opts.members, opts.dietary)}
 
 【本周日期】
-${opts.weekDates.join(", ")}（周一—周六）
+${opts.weekDates.join(", ")}（周一至周五 + 周日，共 6 个做饭日；周六休息）
 
 ${seasonalLine ? `【时令优选】\n${seasonalLine}\n（请尽量使用时令食材，让本周菜单有当季风味）\n\n` : ""}【近期已做（避免重复）】
 ${opts.recentDishes.length ? opts.recentDishes.join("、") : "暂无历史"}

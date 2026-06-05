@@ -6,10 +6,12 @@ import {
   getLatestDietaryProfiles,
   getMembers,
   getRecentWeeksMenu,
+  isoDate,
   query,
   saveWeek,
   saveWeekAnalysis,
   setShoppingItemChecked,
+  weekDates as buildWeekDates,
 } from "@/lib/db";
 import {
   analyzeWeekNutrition,
@@ -79,11 +81,7 @@ export async function generateWeekAction(
     const recentDishes = Array.from(
       new Set(recent.flatMap((r) => r.dishes)),
     );
-    const weekDates = Array.from({ length: 6 }, (_, i) => {
-      const d = new Date(startDate);
-      d.setDate(d.getDate() + i);
-      return d.toISOString().slice(0, 10);
-    });
+    const weekDates = buildWeekDates(startDate).map(isoDate);
     const days = await generateWeekMenu({
       members,
       weekDates,

@@ -7,10 +7,10 @@ export default async function NainaHome() {
   const monday = mondayOf();
   const list = await getShoppingListByWeekStart(monday);
 
-  const saturday = new Date(monday);
-  saturday.setDate(saturday.getDate() + 5);
+  const sunday = new Date(monday);
+  sunday.setDate(sunday.getDate() + 6); // last cooking day is Sunday (Saturday rests)
   const fmt = (d: Date) => `${d.getMonth() + 1}月${d.getDate()}日`;
-  const weekLabel = `${fmt(monday)} – ${fmt(saturday)}`;
+  const weekLabel = `${fmt(monday)} – ${fmt(sunday)}`;
 
   return (
     <div className="space-y-4">

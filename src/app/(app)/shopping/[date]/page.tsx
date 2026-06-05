@@ -7,10 +7,9 @@ import {
   getShoppingListByWeekStart,
   mondayOf,
 } from "@/lib/db";
+import { WEEKDAYS } from "@/lib/shared";
 
 export const dynamic = "force-dynamic";
-
-const WEEKDAYS = ["周一", "周二", "周三", "周四", "周五", "周六"] as const;
 
 export default async function DayShoppingPage({
   params,

@@ -22,6 +22,7 @@ import {
   isoDate,
   query,
   saveWeek,
+  weekDates as buildWeekDates,
 } from "@/lib/db";
 import type { DayInput } from "@/lib/shared";
 
@@ -89,11 +90,7 @@ export class WeeklyGeneration extends WorkflowEntrypoint<Env, Params> {
       const recentDishes = Array.from(
         new Set(recent.flatMap((r) => r.dishes)),
       );
-      const weekDates = Array.from({ length: 6 }, (_, i) => {
-        const d = new Date(weekStart);
-        d.setDate(d.getDate() + i);
-        return isoDate(d);
-      });
+      const weekDates = buildWeekDates(weekStart).map(isoDate);
 
       const days = await generateWeekMenu({
         members,

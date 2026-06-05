@@ -97,8 +97,8 @@ export default async function Home() {
           <CardContent className="pt-4 text-sm">
             <p className="text-muted-foreground">
               {showTomorrow
-                ? "明天是周日 / 计划之外的日子，可休息或自由安排。"
-                : "今天是周日 / 计划之外的日子，由家里自由安排。"}
+                ? "明天是周六 / 计划之外的日子，可休息或自由安排。"
+                : "今天是周六 / 计划之外的日子，由家里自由安排。"}
             </p>
           </CardContent>
         ) : target.dishes.every((d) => !d.name.trim()) ? (
@@ -277,7 +277,7 @@ export default async function Home() {
       </Card>
 
       <footer className="text-center text-xs text-muted-foreground/70">
-        <p>每周日 09:00 自动出下周菜单 · 共 {filledDays} / {week.days.length} 天已编排</p>
+        <p>每周六 09:00 自动出下周菜单 · 共 {filledDays} / {week.days.length} 天已编排</p>
       </footer>
     </div>
   );

@@ -40,7 +40,7 @@ if (r.rows.length === 0) {
 
 const days = r.rows[0].days;
 const SLOTS = ["主荤", "副荤", "蔬菜", "凉菜", "汤"];
-const WEEKDAYS = ["周一", "周二", "周三", "周四", "周五", "周六"];
+const WEEKDAYS = ["周一", "周二", "周三", "周四", "周五", "周日"];
 
 const rows = days.map((d, di) => {
   const date = d.date.slice(5).replace("-", ".");

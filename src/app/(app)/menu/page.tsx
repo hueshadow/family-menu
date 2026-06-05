@@ -25,7 +25,7 @@ export default async function MenuPage() {
         <div className="space-y-1">
           <h3 className="font-display text-3xl tracking-wide">本周菜单</h3>
           <p className="text-sm text-muted-foreground">
-            {week.days[0].date} – {week.days[5].date} · 周一至周六 · 每天 5 道菜
+            {week.days[0].date} – {week.days[5].date} · 周一至周五 + 周日 · 每天 5 道菜
           </p>
           <p className="text-xs text-muted-foreground/80">
             默认以江浙家常为主，每周可适度融合 1-2 天川菜、徽菜或地中海风味
@@ -41,7 +41,7 @@ export default async function MenuPage() {
             <Badge className="text-xs">🤖 AI 自动生成</Badge>
           ) : null}
           <span className="text-xs text-muted-foreground/80">
-            🕘 周日 09:00 自动生成
+            🕘 周六 09:00 自动生成
           </span>
         </div>
       </div>

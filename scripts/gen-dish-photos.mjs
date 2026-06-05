@@ -36,7 +36,7 @@ if (r.rows.length === 0) {
 }
 
 const SLOTS = ["主荤", "副荤", "蔬菜", "凉菜", "汤"];
-const WEEKDAYS = ["周一", "周二", "周三", "周四", "周五", "周六"];
+const WEEKDAYS = ["周一", "周二", "周三", "周四", "周五", "周日"];
 
 const dishes = [];
 r.rows[0].days.forEach((d, di) => {

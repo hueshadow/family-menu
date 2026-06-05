@@ -4,7 +4,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
-import type { DayInput } from "@/lib/shared";
+import { WEEKDAYS, type DayInput } from "@/lib/shared";
 
 const execp = promisify(exec);
 const HOME = homedir();
@@ -15,7 +15,6 @@ const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 export const MENU_BOARDS_DIR = OUT_DIR;
 
 const SLOTS = ["主荤", "副荤", "蔬菜", "凉菜", "汤"] as const;
-const WEEKDAYS = ["周一", "周二", "周三", "周四", "周五", "周六"] as const;
 
 function escapeHtml(s: string): string {
   return s

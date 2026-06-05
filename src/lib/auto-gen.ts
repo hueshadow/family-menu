@@ -8,6 +8,7 @@ import {
   isoDate,
   query,
   saveWeek,
+  weekDates as buildWeekDates,
 } from "@/lib/db";
 import { generateDishPhotosForWeek } from "@/lib/dish-photos";
 import { generateWeekMenu } from "@/lib/menu-gen";
@@ -43,11 +44,7 @@ export async function runAutoWeekGeneration(
     );
     const recent = await getRecentWeeksMenu(weekStart, 3);
     const recentDishes = Array.from(new Set(recent.flatMap((r) => r.dishes)));
-    const weekDates = Array.from({ length: 6 }, (_, i) => {
-      const d = new Date(weekStart);
-      d.setDate(d.getDate() + i);
-      return isoDate(d);
-    });
+    const weekDates = buildWeekDates(weekStart).map(isoDate);
 
     const days = await generateWeekMenu({
       members,

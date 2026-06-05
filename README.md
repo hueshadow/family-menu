@@ -12,8 +12,8 @@
 
 ## 计划规则
 
-- 周一—周六：阿姨做饭，**5 人同桌**每日 5 道菜（主荤 / 副荤 / 蔬菜 / 凉菜 / 汤）
-- 周日：自由 / 外食 / 简餐备料
+- 周一—周五 + 周日：阿姨做饭，**5 人同桌**每日 5 道菜（主荤 / 副荤 / 蔬菜 / 凉菜 / 汤）
+- 周六：自由 / 外食 / 简餐备料（休息日）
 - 同桌即"最大公约数"，份量与餐外补充按个体调节
 
 ## 技术栈
@@ -172,7 +172,9 @@ npm run start:lan
 
 ## 自动调度
 
-每周日 09:00—09:59，内置调度器（`src/lib/scheduler.ts`）检测到触发窗口后，自动调用 `src/lib/auto-gen.ts` 生成下周菜单，结果写入 DB。调度器在 `instrumentation.ts` 启动钩子中初始化，随 Next.js 进程存活。
+每周六 09:00—09:59，内置调度器（`src/lib/scheduler.ts`）检测到触发窗口后，自动调用 `src/lib/auto-gen.ts` 生成**下周**菜单（周一—周五 + 周日，周六休息），结果写入 DB。调度器在 `instrumentation.ts` 启动钩子中初始化（仅 `NEXT_RUNTIME === "nodejs"`，即长驻 `next start`/`next dev` 进程），随 Next.js 进程存活。
+
+> 部署到 Cloudflare Workers 时此进程内调度器自动禁用，改由 `wrangler.toml` 的 Cron Triggers + `src/workflows/` 调度（该路径目前休眠，cron 仍为旧的周日时间，如启用需另行对齐为周六）。
 
 ## 批量解析体检报告
 
@@ -236,7 +238,7 @@ src/
    ├─ health.ts               体检报告解析 + 处方推导
    ├─ pdf.ts                  PDF 文本/视觉路径
    ├─ seasonal.ts             苏州 12 月时令食材
-   ├─ scheduler.ts            周日 09:00 自动调度
+   ├─ scheduler.ts            周六 09:00 自动调度
    ├─ auto-gen.ts             自动生成下周菜单
    └─ supabase.ts             Supabase 客户端
 instrumentation.ts            Next.js 启动钩子（启 scheduler）
@@ -266,5 +268,5 @@ scripts/
 | **M7** | 一键卡片导出（Chrome 截图）+ 微信分享 | ✅ |
 | **M8** | 统一入口重构（去除角色路由）+ 智能当日卡片 | ✅ |
 | **M9** | cloudflared 具名隧道（familymenu.xyz）+ launchd 双 agent | ✅ |
-| **+** | 时令食材 + 营养趋势 + 周日自动调度 | ✅ |
+| **+** | 时令食材 + 营养趋势 + 周六自动调度 | ✅ |
 | **+** | 温暖餐桌主题 | ✅ |

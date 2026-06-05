@@ -32,7 +32,7 @@ export default async function AyiHome() {
         <div className="rounded-md border p-4">
           <h3 className="font-display text-xl tracking-wide">{todayLabel}</h3>
           <p className="mt-2 text-sm text-muted-foreground">
-            今天是周日 / 计划之外的日子，由家里自由安排。
+            今天是周六 / 计划之外的日子，由家里自由安排。
           </p>
         </div>
       </div>

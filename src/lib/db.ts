@@ -64,12 +64,13 @@ export async function query<T = Record<string, unknown>>(
 // ---------- date helpers ----------
 
 export function mondayOf(d: Date = new Date()): Date {
-  // Sunday → next Monday (the menu is for Mon–Sat, so Sunday should preview "tomorrow's week")
-  // Mon–Sat → that same week's Monday
+  // Cooking days are Mon–Fri + Sun (Saturday rests), so Sunday belongs to the
+  // week that began the previous Monday → Sunday maps back to that Monday (−6).
+  // Mon–Sat → that same week's Monday.
   const x = new Date(d);
   x.setHours(0, 0, 0, 0);
   const dow = x.getDay(); // 0 Sun..6 Sat
-  const diff = dow === 0 ? 1 : 1 - dow;
+  const diff = dow === 0 ? -6 : 1 - dow;
   x.setDate(x.getDate() + diff);
   return x;
 }
@@ -83,10 +84,13 @@ export function isoDate(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
+// Cooking-day offsets from Monday: Mon–Fri + Sun. Saturday (+5) is the rest day.
+export const DAY_OFFSETS = [0, 1, 2, 3, 4, 6] as const;
+
 export function weekDates(weekStart: Date): Date[] {
-  return Array.from({ length: 6 }, (_, i) => {
+  return DAY_OFFSETS.map((off) => {
     const x = new Date(weekStart);
-    x.setDate(x.getDate() + i);
+    x.setDate(x.getDate() + off);
     return x;
   });
 }
