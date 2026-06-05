@@ -34,9 +34,32 @@ export async function uploadToR2(
       httpMetadata: { contentType },
     });
   } else {
-    console.warn(`[r2] upload skipped (no bucket): ${key}`);
+    await putToLocalFs(key, body);
   }
   return `${R2_PUBLIC}/${key}`;
+}
+
+/**
+ * 本地降级写入：非 Cloudflare 运行时（next dev / next start）无 R2 binding 时，
+ * 把对象写到仓库内的 family-menu-data/<key>，与 getFromR2 的读兜底对称。
+ * node:fs 动态 import，避免进入 Workers 打包图；含目录穿越防护。
+ */
+async function putToLocalFs(key: string, body: Buffer | Uint8Array): Promise<void> {
+  try {
+    const { mkdir, writeFile } = await import("node:fs/promises");
+    const { join, normalize, dirname } = await import("node:path");
+    const base = join(process.cwd(), "family-menu-data");
+    const path = normalize(join(base, key));
+    if (!path.startsWith(base)) {
+      console.warn(`[r2] local write rejected (path traversal): ${key}`);
+      return;
+    }
+    await mkdir(dirname(path), { recursive: true });
+    await writeFile(path, body);
+    console.log(`[r2] local write: family-menu-data/${key}`);
+  } catch (e) {
+    console.warn(`[r2] local write failed: ${key} — ${e instanceof Error ? e.message : e}`);
+  }
 }
 
 /** 检查 R2 key 是否存在 */
