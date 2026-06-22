@@ -80,20 +80,33 @@ export async function runAutoWeekGeneration(
  */
 async function spawnImagePipeline(weekStart: Date, days: DayInput[]): Promise<void> {
   const { writeFile } = await import("node:fs/promises");
+  const { openSync, closeSync } = await import("node:fs");
   const { join } = await import("node:path");
   const { spawn } = await import("node:child_process");
 
-  const dataPath = `/tmp/family-menu-pipeline-${Date.now()}.json`;
+  const stamp = Date.now();
+  const dataPath = `/tmp/family-menu-pipeline-${stamp}.json`;
+  const logPath = `/tmp/family-menu-pipeline-${stamp}.log`;
   await writeFile(dataPath, JSON.stringify({ weekStart: isoDate(weekStart), days }), "utf8");
 
+  // Worker stdout+stderr → log file; parent closes its fd copy immediately after spawn.
+  const logFd = openSync(logPath, "w");
   const workerPath = join(process.cwd(), "scripts/image-pipeline-worker.mjs");
   const child = spawn(process.execPath, [workerPath, dataPath], {
     detached: true,
-    stdio: "ignore",
+    stdio: ["ignore", logFd, logFd],
     env: process.env as NodeJS.ProcessEnv,
   });
+  closeSync(logFd); // parent closes its copy; child inherits and continues writing
+
+  // Exit handler fires when worker finishes (or crashes); does not keep event loop alive.
+  child.on("exit", (code, signal) => {
+    console.log(
+      `[auto-gen] pipeline worker done · PID=${child.pid} · exit=${code ?? signal} · log=${logPath}`,
+    );
+  });
   child.unref();
-  console.log(`[auto-gen] image pipeline spawned · PID=${child.pid} · week=${isoDate(weekStart)}`);
+  console.log(`[auto-gen] image pipeline spawned · PID=${child.pid} · week=${isoDate(weekStart)} · log=${logPath}`);
 }
 
 export async function runImagePipeline(

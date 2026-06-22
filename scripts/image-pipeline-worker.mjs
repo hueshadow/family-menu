@@ -90,10 +90,16 @@ async function runBatched(items, parallel, fn) {
 }
 
 // ---------------------------------------------------------------------------
-// 1. 菜品图 (PARALLEL=5)
+// 并发配置 — 保守默认值 (1) 防止机器级 OOM；可通过 env var 提高。
+// 长期方案：用外部 cron/launchd 拉起一次性任务，不和 Web 服务共机抢内存。
+// ---------------------------------------------------------------------------
+const DISH_PARALLEL = Math.max(1, parseInt(process.env.PIPELINE_DISH_PARALLEL ?? "1", 10));
+const TABLE_PARALLEL = Math.max(1, parseInt(process.env.PIPELINE_TABLE_PARALLEL ?? "1", 10));
+
+// ---------------------------------------------------------------------------
+// 1. 菜品图
 // ---------------------------------------------------------------------------
 const SLOTS = ["主荤", "副荤", "蔬菜", "凉菜", "汤"];
-const DISH_PARALLEL = 5;
 
 async function genDishPhoto(dish) {
   const prompt = `Top-down professional food photography of one Chinese home dish: ${dish.name}.
@@ -128,15 +134,14 @@ const dishList = days.flatMap((day, di) =>
   ),
 );
 
-console.log(`[image-pipeline-worker] generating ${dishList.length} dish photos (parallel=${DISH_PARALLEL})`);
+console.log(`[image-pipeline-worker] generating ${dishList.length} dish photos (parallel=${DISH_PARALLEL}) · table_parallel=${TABLE_PARALLEL}`);
 const dishResults = await runBatched(dishList, DISH_PARALLEL, genDishPhoto);
 const dishOk = dishResults.filter(Boolean).length;
 console.log(`[image-pipeline-worker] dish photos · ${dishOk}/${dishList.length} ok · ${((Date.now() - t0) / 1000).toFixed(0)}s`);
 
 // ---------------------------------------------------------------------------
-// 2. 餐桌图 (PARALLEL=3)
+// 2. 餐桌图
 // ---------------------------------------------------------------------------
-const TABLE_PARALLEL = 3;
 
 async function genTablePhoto(day) {
   const dishes = day.dishes.filter((d) => d.name?.trim()).map((d) => d.name.trim());
@@ -255,10 +260,11 @@ const pngPath = join(BOARD_DIR, `${weekStart}_week.png`);
 await writeFile(htmlPath, html, "utf8");
 
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-const cmd = `"${CHROME}" --headless=new --disable-gpu --hide-scrollbars --window-size=1024,1900 --virtual-time-budget=8000 --screenshot="${pngPath}" "file://${htmlPath}"`;
+// --disable-dev-shm-usage --no-sandbox: reduce Chrome's /dev/shm and sandbox overhead
+const cmd = `"${CHROME}" --headless=new --disable-gpu --no-sandbox --disable-dev-shm-usage --hide-scrollbars --window-size=1024,1900 --virtual-time-budget=8000 --screenshot="${pngPath}" "file://${htmlPath}"`;
 
 try {
-  // timeout=120s — Chrome in this child process; if it OOMs, only this worker dies
+  // timeout=120s; this worker is already detached from the web service — OOM only kills us
   await execp(cmd, { maxBuffer: 8 * 1024 * 1024, timeout: 120_000 });
   console.log(`[image-pipeline-worker] menu board → ${pngPath}`);
 } catch (e) {
