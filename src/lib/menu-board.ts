@@ -147,6 +147,7 @@ export async function composeMenuBoard(opts: {
   const pngPath = join(OUT_DIR, `${opts.weekStart}_week_real.png`);
   await writeFile(htmlPath, html, "utf8");
   const cmd = `"${CHROME}" --headless=new --disable-gpu --hide-scrollbars --window-size=1024,1900 --virtual-time-budget=8000 --screenshot="${pngPath}" "file://${htmlPath}"`;
-  await execp(cmd, { maxBuffer: 64 * 1024 * 1024 });
+  // maxBuffer reduced: screenshot goes to file, not stdout; timeout guards against Chrome hangs
+  await execp(cmd, { maxBuffer: 8 * 1024 * 1024, timeout: 120_000 });
   return pngPath;
 }
