@@ -14,6 +14,7 @@ import { generateDishPhotosForWeek } from "@/lib/dish-photos";
 import { generateWeekMenu } from "@/lib/menu-gen";
 import { composeMenuBoard } from "@/lib/menu-board";
 import { generateWeekTablePhotos } from "@/lib/table-photo";
+import type { DayInput } from "@/lib/shared";
 
 export async function runAutoWeekGeneration(
   weekStart: Date,
@@ -59,18 +60,53 @@ export async function runAutoWeekGeneration(
       [week.id],
     );
 
-    // Image pipeline (failure does NOT abort menu generation — purely cosmetic)
-    void runImagePipeline(weekStart, days).catch((e) => {
-      console.error("[auto-gen] image pipeline failed:", e);
+    // Image pipeline runs in a detached child process so Chrome OOM can't kill the web service.
+    void spawnImagePipeline(weekStart, days).catch((e) => {
+      console.error("[auto-gen] failed to spawn image pipeline:", e);
     });
 
-    return { status: "generated", reason: `week ${isoDate(weekStart)} ${days.length} days · image pipeline detached` };
+    return { status: "generated", reason: `week ${isoDate(weekStart)} ${days.length} days · image pipeline spawned` };
   } catch (e) {
     return {
       status: "error",
       reason: e instanceof Error ? e.message : String(e),
     };
   }
+}
+
+/**
+ * 在独立子进程里运行图片流水线（Node.js 专用）。
+ * detached + unref，子进程 OOM / Chrome 崩溃只杀子进程，Web 服务进程不受影响。
+ */
+async function spawnImagePipeline(weekStart: Date, days: DayInput[]): Promise<void> {
+  const { writeFile } = await import("node:fs/promises");
+  const { openSync, closeSync } = await import("node:fs");
+  const { join } = await import("node:path");
+  const { spawn } = await import("node:child_process");
+
+  const stamp = Date.now();
+  const dataPath = `/tmp/family-menu-pipeline-${stamp}.json`;
+  const logPath = `/tmp/family-menu-pipeline-${stamp}.log`;
+  await writeFile(dataPath, JSON.stringify({ weekStart: isoDate(weekStart), days }), "utf8");
+
+  // Worker stdout+stderr → log file; parent closes its fd copy immediately after spawn.
+  const logFd = openSync(logPath, "w");
+  const workerPath = join(process.cwd(), "scripts/image-pipeline-worker.mjs");
+  const child = spawn(process.execPath, [workerPath, dataPath], {
+    detached: true,
+    stdio: ["ignore", logFd, logFd],
+    env: process.env as NodeJS.ProcessEnv,
+  });
+  closeSync(logFd); // parent closes its copy; child inherits and continues writing
+
+  // Exit handler fires when worker finishes (or crashes); does not keep event loop alive.
+  child.on("exit", (code, signal) => {
+    console.log(
+      `[auto-gen] pipeline worker done · PID=${child.pid} · exit=${code ?? signal} · log=${logPath}`,
+    );
+  });
+  child.unref();
+  console.log(`[auto-gen] image pipeline spawned · PID=${child.pid} · week=${isoDate(weekStart)} · log=${logPath}`);
 }
 
 export async function runImagePipeline(
